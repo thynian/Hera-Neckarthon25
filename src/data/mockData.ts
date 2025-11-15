@@ -82,7 +82,7 @@ export const mockDocumentations: Documentation[] = [
       "Besprechung der Anforderungen für Projekt A. Der Kunde wünscht eine Lösung bis Ende März...",
     summaryText:
       "Initiales Meeting zur Erfassung der Projektanforderungen. Budget und Timeline wurden besprochen.",
-    status: "CLOSED",
+    status: "VERIFIED",
     createdAt: "2025-01-15T10:00:00Z",
   },
   {

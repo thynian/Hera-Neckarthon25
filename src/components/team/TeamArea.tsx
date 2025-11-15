@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DocumentationStatusBadge } from "@/components/documentation/DocumentationStatusBadge";
 
 interface TeamAreaProps {
   clients: Client[];
@@ -334,9 +335,7 @@ export const TeamArea = ({ clients, cases, documentations }: TeamAreaProps) => {
                             {new Date(doc.date).toLocaleDateString("de-DE")}
                           </p>
                         </div>
-                        <Badge variant={doc.status === "OPEN" ? "secondary" : "outline"}>
-                          {doc.status}
-                        </Badge>
+                        <DocumentationStatusBadge status={doc.status} />
                       </div>
                     </div>
                   );
@@ -374,11 +373,9 @@ export const TeamArea = ({ clients, cases, documentations }: TeamAreaProps) => {
                 <span className="font-medium">Datum:</span>{" "}
                 {new Date(selectedDocumentation.date).toLocaleDateString("de-DE")}
               </p>
-              <p className="text-sm">
+              <p className="text-sm flex items-center gap-2">
                 <span className="font-medium">Status:</span>{" "}
-                <Badge variant={selectedDocumentation.status === "OPEN" ? "secondary" : "outline"}>
-                  {selectedDocumentation.status}
-                </Badge>
+                <DocumentationStatusBadge status={selectedDocumentation.status} />
               </p>
             </div>
 

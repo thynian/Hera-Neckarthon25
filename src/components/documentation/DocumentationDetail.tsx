@@ -23,6 +23,7 @@ import {
 import { ArrowLeft, Play, Pause, Trash2, Plus, FileText, Download } from "lucide-react";
 import { toast } from "sonner";
 import { generateId } from "@/utils/idGenerator";
+import { DocumentationStatusBadge } from "./DocumentationStatusBadge";
 
 interface DocumentationDetailProps {
   documentation: Documentation;
@@ -89,6 +90,7 @@ export const DocumentationDetail = ({
     setEditedDoc({
       ...editedDoc,
       transcriptText: "Dies ist ein Beispiel-Transkript (Mock). In der echten Implementierung würde hier der transkribierte Text der Audiodateien erscheinen.",
+      status: editedDoc.status === "OPEN" ? "IN_REVIEW" : editedDoc.status,
     });
     toast.success("Transkription erstellt (Mock)");
   };
@@ -97,6 +99,7 @@ export const DocumentationDetail = ({
     setEditedDoc({
       ...editedDoc,
       summaryText: "Dies ist eine Beispiel-Zusammenfassung (Mock). In der echten Implementierung würde hier eine KI-generierte Zusammenfassung erscheinen.",
+      status: editedDoc.status === "OPEN" ? "IN_REVIEW" : editedDoc.status,
     });
     toast.success("Zusammenfassung erstellt (Mock)");
   };
@@ -139,12 +142,20 @@ export const DocumentationDetail = ({
     }
   };
 
-  const handleToggleStatus = () => {
-    const newStatus = editedDoc.status === "OPEN" ? "CLOSED" : "OPEN";
+  const handleMarkAsVerified = () => {
     setEditedDoc({
       ...editedDoc,
-      status: newStatus,
+      status: "VERIFIED",
     });
+    toast.success("Dokumentation als überprüft markiert");
+  };
+
+  const handleMarkAsInReview = () => {
+    setEditedDoc({
+      ...editedDoc,
+      status: "IN_REVIEW",
+    });
+    toast.success("Dokumentation zurück in Überprüfung gesetzt");
   };
 
   const handleSave = () => {
@@ -179,9 +190,19 @@ export const DocumentationDetail = ({
             </p>
           </div>
         </div>
-        <Badge variant={editedDoc.status === "OPEN" ? "secondary" : "outline"}>
-          {editedDoc.status}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <DocumentationStatusBadge status={editedDoc.status} />
+          {editedDoc.status !== "VERIFIED" && (
+            <Button size="sm" onClick={handleMarkAsVerified}>
+              Als überprüft markieren
+            </Button>
+          )}
+          {editedDoc.status === "VERIFIED" && (
+            <Button size="sm" variant="outline" onClick={handleMarkAsInReview}>
+              Zurück in Überprüfung
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Grunddaten */}
@@ -447,15 +468,6 @@ export const DocumentationDetail = ({
         <Button variant="outline" onClick={onBack}>
           Abbrechen
         </Button>
-        {editedDoc.status === "OPEN" ? (
-          <Button variant="secondary" onClick={handleToggleStatus}>
-            Abschließen
-          </Button>
-        ) : (
-          <Button variant="secondary" onClick={handleToggleStatus}>
-            Wieder öffnen
-          </Button>
-        )}
         <Button onClick={handleSave}>
           Änderungen speichern
         </Button>

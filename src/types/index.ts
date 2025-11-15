@@ -31,7 +31,7 @@ export type Attachment = {
   blobUrl: string;
 };
 
-export type DocumentationStatus = "OPEN" | "CLOSED";
+export type DocumentationStatus = "OPEN" | "IN_REVIEW" | "VERIFIED";
 
 export type Documentation = {
   id: string;
