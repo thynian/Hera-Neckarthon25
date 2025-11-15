@@ -2,24 +2,27 @@ import { useState } from "react";
 import { Documentation, AudioFile } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Plus, Pause } from "lucide-react";
+import { Play, Plus, Pause, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface AudioFilesListProps {
   documentations: Documentation[];
   audioFiles: AudioFile[];
+  setAudioFiles: React.Dispatch<React.SetStateAction<AudioFile[]>>;
 }
 
-export const AudioFilesList = ({ documentations, audioFiles }: AudioFilesListProps) => {
+export const AudioFilesList = ({ documentations, audioFiles, setAudioFiles }: AudioFilesListProps) => {
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
   
   // Sammle alle Audio-Dateien aus Dokumentationen
-  const allAudioFiles: (AudioFile & { docTitle?: string })[] = [];
+  const allAudioFiles: (AudioFile & { docTitle?: string; isInDoc?: boolean })[] = [];
   
   documentations.forEach((doc) => {
     doc.audioFiles.forEach((audio) => {
       allAudioFiles.push({
         ...audio,
         docTitle: doc.title,
+        isInDoc: true,
       });
     });
   });
@@ -29,6 +32,7 @@ export const AudioFilesList = ({ documentations, audioFiles }: AudioFilesListPro
     allAudioFiles.push({
       ...audio,
       docTitle: undefined,
+      isInDoc: false,
     });
   });
 
@@ -59,6 +63,13 @@ export const AudioFilesList = ({ documentations, audioFiles }: AudioFilesListPro
 
   const handleAddToDocumentation = (audioId: string) => {
     console.log("Zu Dokumentation hinzufügen:", audioId);
+  };
+
+  const handleDeleteAudio = (audioId: string) => {
+    if (confirm("Möchten Sie diese Audiodatei wirklich löschen?")) {
+      setAudioFiles((prev) => prev.filter((af) => af.id !== audioId));
+      toast.success("Audiodatei gelöscht");
+    }
   };
 
   return (
@@ -125,6 +136,17 @@ export const AudioFilesList = ({ documentations, audioFiles }: AudioFilesListPro
                     <Plus className="h-3 w-3 mr-1" />
                     Zu Dokumentation hinzufügen
                   </Button>
+                  {!audio.isInDoc && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleDeleteAudio(audio.id)}
+                      className="text-xs px-2 py-1 text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-3 w-3 mr-1" />
+                      Löschen
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}

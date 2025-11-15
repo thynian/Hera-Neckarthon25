@@ -118,6 +118,10 @@ export const TeamArea = ({ clients, cases, documentations, setDocumentations, au
     setEditingDocId(null);
   };
 
+  const handleDeleteDocumentation = (docId: string) => {
+    setDocumentations((prev) => prev.filter((doc) => doc.id !== docId));
+  };
+
   const handleBreadcrumbClients = () => {
     setTeamLevel("clients");
     setTeamActiveTab("clients");
@@ -196,6 +200,7 @@ export const TeamArea = ({ clients, cases, documentations, setDocumentations, au
         audioFiles={audioFiles}
         onBack={() => setEditingDocId(null)}
         onSave={handleUpdateDocumentation}
+        onDelete={handleDeleteDocumentation}
       />
     );
   }
