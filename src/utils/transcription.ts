@@ -6,9 +6,7 @@ export const transcribeAudioFile = async (audioId: string, filePath: string) => 
     toast.info("Transkription wird gestartet...");
 
     // Download audio file from Supabase Storage
-    const { data: audioData, error: downloadError } = await supabase.storage
-      .from("audio-files")
-      .download(filePath);
+    const { data: audioData, error: downloadError } = await supabase.storage.from("audio-files").download(filePath);
 
     if (downloadError) {
       throw new Error(`Fehler beim Laden der Datei: ${downloadError.message}`);
@@ -19,7 +17,7 @@ export const transcribeAudioFile = async (audioId: string, filePath: string) => 
     formData.append("file", audioData, filePath.split("/").pop() || "audio.mp3");
 
     // Send to transcription API
-    const response = await fetch("http://app.maltezeimer.de/transcription/upload_file", {
+    const response = await fetch("http://app.maltezeimer.de:443/transcription/upload_file", {
       method: "POST",
       body: formData,
     });
