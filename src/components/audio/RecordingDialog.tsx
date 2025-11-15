@@ -71,10 +71,6 @@ export const RecordingDialog = ({
   };
 
   const handleClose = () => {
-    // Bereinige blobUrl beim Schließen
-    if (blobUrl) {
-      URL.revokeObjectURL(blobUrl);
-    }
     resetRecording();
     setFileName("");
     setBlobUrl(null);
