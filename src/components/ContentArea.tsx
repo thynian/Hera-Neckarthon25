@@ -1,8 +1,10 @@
+import { useState, useEffect } from "react";
 import { Dashboard } from "./dashboard/Dashboard";
-import { TeamArea } from "./team/TeamAreaSimple";
+import { TeamArea } from "./team/TeamArea";
 import { useClients } from "@/hooks/useClients";
 import { useCases } from "@/hooks/useCases";
 import { useDocumentations } from "@/hooks/useDocumentations";
+import { useAudioFiles } from "@/hooks/useAudioFiles";
 
 type TabType = "offen" | "mein-bereich" | "team-bereich";
 
@@ -28,7 +30,13 @@ const contentMap: Record<TabType, { title: string; description: string }> = {
 export const ContentArea = ({ activeTab }: ContentAreaProps) => {
   const { clients, isLoading: clientsLoading } = useClients();
   const { cases, isLoading: casesLoading } = useCases();
-  const { documentations, isLoading: docsLoading } = useDocumentations();
+  const { documentations: docsData, isLoading: docsLoading } = useDocumentations();
+  
+  const [documentations, setDocumentations] = useState(docsData);
+  
+  useEffect(() => {
+    setDocumentations(docsData);
+  }, [docsData]);
   
   const content = contentMap[activeTab];
 
@@ -60,7 +68,13 @@ export const ContentArea = ({ activeTab }: ContentAreaProps) => {
         {activeTab === "offen" ? (
           <Dashboard />
         ) : activeTab === "team-bereich" ? (
-          <TeamArea />
+          <TeamArea 
+            clients={clients}
+            cases={cases}
+            documentations={documentations}
+            setDocumentations={setDocumentations}
+            audioFiles={[]}
+          />
         ) : (
           <div className="space-y-6">
             <div className="space-y-4">
