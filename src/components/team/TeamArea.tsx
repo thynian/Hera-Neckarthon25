@@ -4,8 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Play, Pause } from "lucide-react";
+import { Play, Pause, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 interface TeamAreaProps {
   clients: Client[];
@@ -94,6 +102,48 @@ export const TeamArea = ({ clients, cases, documentations }: TeamAreaProps) => {
   const selectedCase = cases.find((c) => c.id === selectedCaseId);
   const selectedDocumentation = documentations.find((d) => d.id === selectedDocumentationId);
 
+  // Render context info bar
+  const renderContextInfo = () => {
+    if (!selectedDocumentation) return null;
+    
+    const docCase = cases.find((c) => c.id === selectedDocumentation.caseId);
+    const docClient = docCase ? clients.find((c) => c.id === docCase.clientId) : null;
+
+    return (
+      <div className="flex gap-4 text-xs text-muted-foreground mb-4 pb-3 border-b">
+        {docClient && (
+          <span>
+            <span className="font-medium">Client:</span>{" "}
+            <button
+              onClick={() => {
+                setSelectedClientId(docClient.id);
+                setSelectedCaseId(undefined);
+                setSelectedDocumentationId(undefined);
+              }}
+              className="hover:text-foreground hover:underline"
+            >
+              {docClient.name}
+            </button>
+          </span>
+        )}
+        {docCase && (
+          <span>
+            <span className="font-medium">Fall:</span>{" "}
+            <button
+              onClick={() => {
+                setSelectedCaseId(docCase.id);
+                setSelectedDocumentationId(undefined);
+              }}
+              className="hover:text-foreground hover:underline"
+            >
+              {docCase.title}
+            </button>
+          </span>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -103,18 +153,79 @@ export const TeamArea = ({ clients, cases, documentations }: TeamAreaProps) => {
         </p>
       </div>
 
-      {/* Search Field */}
-      <div>
-        <Input
-          type="text"
-          placeholder="Suche in Clienten, Fällen oder Dokumentationen…"
-          value={teamSearch}
-          onChange={(e) => setTeamSearch(e.target.value)}
-          className="max-w-2xl"
-        />
-      </div>
+      <Input
+        type="text"
+        placeholder="Suche in Clienten, Fällen oder Dokumentationen…"
+        value={teamSearch}
+        onChange={(e) => setTeamSearch(e.target.value)}
+        className="max-w-2xl"
+      />
 
-      {/* Tabs */}
+      {/* Breadcrumb Navigation */}
+      {(selectedClientId || selectedCaseId || selectedDocumentationId) && (
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink
+                onClick={() => {
+                  setSelectedClientId(undefined);
+                  setSelectedCaseId(undefined);
+                  setSelectedDocumentationId(undefined);
+                }}
+                className="cursor-pointer"
+              >
+                Team
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            
+            {selectedClient && (
+              <>
+                <BreadcrumbSeparator><ChevronRight className="h-4 w-4" /></BreadcrumbSeparator>
+                <BreadcrumbItem>
+                  {selectedCaseId || selectedDocumentationId ? (
+                    <BreadcrumbLink
+                      onClick={() => {
+                        setSelectedCaseId(undefined);
+                        setSelectedDocumentationId(undefined);
+                      }}
+                      className="cursor-pointer"
+                    >
+                      {selectedClient.name}
+                    </BreadcrumbLink>
+                  ) : (
+                    <BreadcrumbPage>{selectedClient.name}</BreadcrumbPage>
+                  )}
+                </BreadcrumbItem>
+              </>
+            )}
+
+            {selectedCase && (
+              <>
+                <BreadcrumbSeparator><ChevronRight className="h-4 w-4" /></BreadcrumbSeparator>
+                <BreadcrumbItem>
+                  {selectedDocumentationId ? (
+                    <BreadcrumbLink onClick={() => setSelectedDocumentationId(undefined)} className="cursor-pointer">
+                      {selectedCase.title}
+                    </BreadcrumbLink>
+                  ) : (
+                    <BreadcrumbPage>{selectedCase.title}</BreadcrumbPage>
+                  )}
+                </BreadcrumbItem>
+              </>
+            )}
+
+            {selectedDocumentation && (
+              <>
+                <BreadcrumbSeparator><ChevronRight className="h-4 w-4" /></BreadcrumbSeparator>
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{selectedDocumentation.title}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </>
+            )}
+          </BreadcrumbList>
+        </Breadcrumb>
+      )}
+
       <Tabs value={teamActiveTab} onValueChange={(value) => setTeamActiveTab(value as TeamTab)}>
         <TabsList>
           <TabsTrigger value="clients">Clienten</TabsTrigger>
@@ -422,35 +533,19 @@ export const TeamArea = ({ clients, cases, documentations }: TeamAreaProps) => {
                         <span className="font-medium">Fall-ID:</span> {selectedCase.caseId}
                       </p>
                       <p className="text-sm">
+                        <span className="font-medium">Client:</span> {getClientName(selectedCase.clientId)}
+                      </p>
+                      <p className="text-sm">
                         <span className="font-medium">Status:</span>{" "}
                         <Badge variant={selectedCase.status === "OPEN" ? "secondary" : "outline"}>
                           {selectedCase.status}
                         </Badge>
                       </p>
-                      <p className="text-sm">
-                        <span className="font-medium">Erstellt:</span>{" "}
-                        {new Date(selectedCase.createdAt).toLocaleDateString("de-DE")}
-                      </p>
                     </div>
                   </CardContent>
                 </Card>
 
-                {/* Client Info */}
-                {selectedClient && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Zugehöriger Client</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="font-medium">{selectedClient.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Erstellt: {new Date(selectedClient.createdAt).toLocaleDateString("de-DE")}
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Documentations for this Case */}
+                {/* Documentations for selected Case */}
                 <Card>
                   <CardHeader>
                     <CardTitle>Dokumentationen in diesem Fall</CardTitle>
@@ -584,10 +679,10 @@ export const TeamArea = ({ clients, cases, documentations }: TeamAreaProps) => {
           </div>
         </TabsContent>
 
-        {/* Tab: Documentations */}
+        {/* Tab: Dokumentationen */}
         <TabsContent value="docs" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left: Documentation List */}
+            {/* Left: Documentations List */}
             <Card>
               <CardHeader>
                 <CardTitle>Dokumentationen ({filteredDocumentations.length})</CardTitle>
@@ -599,115 +694,60 @@ export const TeamArea = ({ clients, cases, documentations }: TeamAreaProps) => {
                       Keine Dokumentationen gefunden
                     </p>
                   ) : (
-                    filteredDocumentations.map((doc) => {
-                      const caseItem = cases.find((c) => c.id === doc.caseId);
-                      const clientName = caseItem ? getClientName(caseItem.clientId) : "Unbekannt";
-                      return (
-                        <div
-                          key={doc.id}
-                          onClick={() => {
-                            setSelectedDocumentationId(doc.id);
-                            setSelectedCaseId(doc.caseId);
-                            setSelectedClientId(caseItem?.clientId);
-                          }}
-                          className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                            selectedDocumentationId === doc.id
-                              ? "border-primary bg-accent"
-                              : "border-border hover:bg-accent/50"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <p className="font-medium">{doc.title}</p>
-                            <Badge variant={doc.status === "OPEN" ? "secondary" : "outline"}>
-                              {doc.status}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(doc.date).toLocaleDateString("de-DE")}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Fall: {caseItem?.caseId} - {caseItem?.title}
-                          </p>
-                          <p className="text-sm text-muted-foreground">Client: {clientName}</p>
+                    filteredDocumentations.map((doc) => (
+                      <div
+                        key={doc.id}
+                        onClick={() => setSelectedDocumentationId(doc.id)}
+                        className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                          selectedDocumentationId === doc.id
+                            ? "border-primary bg-accent"
+                            : "border-border hover:bg-accent/50"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="font-medium">{doc.title}</p>
+                          <Badge variant={doc.status === "OPEN" ? "secondary" : "outline"}>
+                            {doc.status}
+                          </Badge>
                         </div>
-                      );
-                    })
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(doc.date).toLocaleDateString("de-DE")}
+                        </p>
+                      </div>
+                    ))
                   )}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Right: Documentation Details with Context */}
+            {/* Right: Documentation Details */}
             {selectedDocumentation && (
-              <div className="space-y-4">
-                {/* Documentation Details */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Dokumentation: {selectedDocumentation.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <p className="text-sm">
-                        <span className="font-medium">Datum:</span>{" "}
-                        {new Date(selectedDocumentation.date).toLocaleDateString("de-DE")}
-                      </p>
-                      <p className="text-sm">
-                        <span className="font-medium">Status:</span>{" "}
-                        <Badge
-                          variant={
-                            selectedDocumentation.status === "OPEN" ? "secondary" : "outline"
-                          }
-                        >
-                          {selectedDocumentation.status}
-                        </Badge>
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Dokumentation: {selectedDocumentation.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <p className="text-sm">
+                      <span className="font-medium">Datum:</span>{" "}
+                      {new Date(selectedDocumentation.date).toLocaleDateString("de-DE")}
+                    </p>
+                    <p className="text-sm">
+                      <span className="font-medium">Status:</span>{" "}
+                      <Badge
+                        variant={
+                          selectedDocumentation.status === "OPEN" ? "secondary" : "outline"
+                        }
+                      >
+                        {selectedDocumentation.status}
+                      </Badge>
+                    </p>
+                  </div>
 
-                {/* Case Info */}
-                {selectedCase && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Zugehöriger Fall</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <p className="font-medium">{selectedCase.title}</p>
-                        <p className="text-sm text-muted-foreground">{selectedCase.caseId}</p>
-                        <p className="text-sm">
-                          <span className="font-medium">Status:</span>{" "}
-                          <Badge variant={selectedCase.status === "OPEN" ? "secondary" : "outline"}>
-                            {selectedCase.status}
-                          </Badge>
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Client Info */}
-                {selectedClient && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Zugehöriger Client</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="font-medium">{selectedClient.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Erstellt: {new Date(selectedClient.createdAt).toLocaleDateString("de-DE")}
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Audio Files */}
-                {selectedDocumentation.audioFiles.length > 0 && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Audio-Dateien</CardTitle>
-                    </CardHeader>
-                    <CardContent>
+                  {/* Audio Files */}
+                  {selectedDocumentation.audioFiles.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-2">Audio-Dateien</h4>
                       <div className="space-y-2">
                         {selectedDocumentation.audioFiles.map((audio) => (
                           <div
@@ -740,38 +780,34 @@ export const TeamArea = ({ clients, cases, documentations }: TeamAreaProps) => {
                           </div>
                         ))}
                       </div>
-                    </CardContent>
-                  </Card>
-                )}
+                    </div>
+                  )}
 
-                {/* Transcript */}
-                {selectedDocumentation.transcriptText && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Transkript</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">
-                        {selectedDocumentation.transcriptText}
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
+                  {/* Transcript */}
+                  {selectedDocumentation.transcriptText && (
+                    <div>
+                      <h4 className="font-medium mb-2">Transkript</h4>
+                      <div className="p-3 bg-muted rounded-md">
+                        <p className="text-sm text-muted-foreground">
+                          {selectedDocumentation.transcriptText}
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
-                {/* Summary */}
-                {selectedDocumentation.summaryText && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Zusammenfassung</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">
-                        {selectedDocumentation.summaryText}
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
+                  {/* Summary */}
+                  {selectedDocumentation.summaryText && (
+                    <div>
+                      <h4 className="font-medium mb-2">Zusammenfassung</h4>
+                      <div className="p-3 bg-muted rounded-md">
+                        <p className="text-sm text-muted-foreground">
+                          {selectedDocumentation.summaryText}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             )}
           </div>
         </TabsContent>
