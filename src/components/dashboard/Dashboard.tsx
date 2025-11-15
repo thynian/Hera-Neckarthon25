@@ -45,6 +45,10 @@ export const Dashboard = ({
     setSelectedDocId(null);
   };
 
+  const handleDeleteDocumentation = (docId: string) => {
+    setDocumentations((prev) => prev.filter((doc) => doc.id !== docId));
+  };
+
   const selectedDoc = documentations.find((doc) => doc.id === selectedDocId);
 
   if (selectedDoc) {
@@ -56,6 +60,7 @@ export const Dashboard = ({
         audioFiles={audioFiles}
         onBack={() => setSelectedDocId(null)}
         onSave={handleUpdateDocumentation}
+        onDelete={handleDeleteDocumentation}
       />
     );
   }
@@ -93,7 +98,7 @@ export const Dashboard = ({
         </div>
         
         <div className="lg:col-span-1">
-          <AudioFilesList documentations={documentations} audioFiles={audioFiles} />
+          <AudioFilesList documentations={documentations} audioFiles={audioFiles} setAudioFiles={setAudioFiles} />
         </div>
       </div>
     </div>

@@ -32,6 +32,7 @@ interface DocumentationDetailProps {
   audioFiles: AudioFile[];
   onBack: () => void;
   onSave: (updatedDoc: Documentation) => void;
+  onDelete?: (docId: string) => void;
 }
 
 export const DocumentationDetail = ({
@@ -41,6 +42,7 @@ export const DocumentationDetail = ({
   audioFiles,
   onBack,
   onSave,
+  onDelete,
 }: DocumentationDetailProps) => {
   const [editedDoc, setEditedDoc] = useState<Documentation>(documentation);
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
@@ -180,6 +182,14 @@ export const DocumentationDetail = ({
     toast.success("Dokumentation zurück in Überprüfung gesetzt");
   };
 
+  const handleDelete = () => {
+    if (onDelete && confirm("Möchten Sie diese Dokumentation wirklich löschen?")) {
+      onDelete(editedDoc.id);
+      toast.success("Dokumentation gelöscht");
+      onBack();
+    }
+  };
+
   const handleSave = () => {
     onSave(editedDoc);
     toast.success("Änderungen gespeichert");
@@ -222,6 +232,12 @@ export const DocumentationDetail = ({
           {editedDoc.status === "VERIFIED" && (
             <Button size="sm" variant="outline" onClick={handleMarkAsInReview}>
               Zurück in Überprüfung
+            </Button>
+          )}
+          {onDelete && (
+            <Button size="sm" variant="destructive" onClick={handleDelete}>
+              <Trash2 className="h-4 w-4 mr-1" />
+              Löschen
             </Button>
           )}
         </div>
