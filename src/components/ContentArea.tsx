@@ -1,8 +1,9 @@
 import { Dashboard } from "./dashboard/Dashboard";
-import { TeamArea } from "./team/TeamAreaSimple";
+import { TeamArea } from "./team/TeamArea";
 import { useClients } from "@/hooks/useClients";
 import { useCases } from "@/hooks/useCases";
 import { useDocumentations } from "@/hooks/useDocumentations";
+import { useAudioFiles } from "@/hooks/useAudioFiles";
 
 type TabType = "offen" | "mein-bereich" | "team-bereich";
 
