@@ -1,8 +1,8 @@
 import { Documentation, Case } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { ExternalLink } from "lucide-react";
+import { DocumentationStatusBadge } from "@/components/documentation/DocumentationStatusBadge";
 
 interface OpenDocumentationsProps {
   documentations: Documentation[];
@@ -15,7 +15,7 @@ export const OpenDocumentations = ({
   cases,
   onOpenDocumentation,
 }: OpenDocumentationsProps) => {
-  const openDocs = documentations.filter((doc) => doc.status === "OPEN");
+  const openDocs = documentations.filter((doc) => doc.status === "OPEN" || doc.status === "IN_REVIEW");
 
   const getCaseById = (caseId: string) => {
     return cases.find((c) => c.id === caseId);
@@ -44,9 +44,7 @@ export const OpenDocumentations = ({
                     <span className="font-medium text-sm sm:text-base truncate">
                       {doc.title}
                     </span>
-                    <Badge variant="secondary" className="text-xs shrink-0">
-                      {doc.status}
-                    </Badge>
+                    <DocumentationStatusBadge status={doc.status} />
                   </div>
                   <div className="text-xs text-muted-foreground">
                     {new Date(doc.date).toLocaleDateString("de-DE", {
