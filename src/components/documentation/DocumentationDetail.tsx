@@ -99,7 +99,6 @@ export const DocumentationDetail = ({
     setEditedDoc({
       ...editedDoc,
       summaryText: "Dies ist eine Beispiel-Zusammenfassung (Mock). In der echten Implementierung würde hier eine KI-generierte Zusammenfassung erscheinen.",
-      status: editedDoc.status === "OPEN" ? "IN_REVIEW" : editedDoc.status,
     });
     toast.success("Zusammenfassung erstellt (Mock)");
   };
