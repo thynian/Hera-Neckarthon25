@@ -36,7 +36,10 @@ export const AudioFilesList = () => {
 
   const handlePlayAudio = (audioId: string) => {
     const audioElement = audioRefs.current.get(audioId);
-    if (!audioElement) return;
+    if (!audioElement) {
+      console.error('Audio element not found for id:', audioId);
+      return;
+    }
 
     if (playingAudioId === audioId) {
       // Pause the current audio
@@ -50,9 +53,20 @@ export const AudioFilesList = () => {
         }
       });
       
-      // Play the selected audio
-      audioElement.play();
-      setPlayingAudioId(audioId);
+      // Play the selected audio with error handling
+      const playPromise = audioElement.play();
+      
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setPlayingAudioId(audioId);
+            console.log('Audio playing successfully');
+          })
+          .catch(error => {
+            console.error('Error playing audio:', error);
+            setPlayingAudioId(null);
+          });
+      }
     }
   };
 
@@ -113,9 +127,17 @@ export const AudioFilesList = () => {
                     controls 
                     src={audio.blobUrl} 
                     className="w-full h-8"
+                    preload="metadata"
                     onPlay={() => setPlayingAudioId(audio.id)}
                     onPause={() => setPlayingAudioId(null)}
                     onEnded={() => setPlayingAudioId(null)}
+                    onError={(e) => {
+                      console.error('Audio error for', audio.fileName, ':', e);
+                      console.error('Audio URL:', audio.blobUrl);
+                    }}
+                    onLoadedMetadata={(e) => {
+                      console.log('Audio metadata loaded for', audio.fileName);
+                    }}
                   />
                 </div>
                 <div className="mt-1 flex flex-wrap gap-2">
