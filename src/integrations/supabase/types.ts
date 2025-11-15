@@ -150,6 +150,7 @@ export type Database = {
         Row: {
           case_id: string
           created_at: string
+          curated_topics: Json | null
           date: string
           id: string
           status: Database["public"]["Enums"]["documentation_status"]
@@ -161,6 +162,7 @@ export type Database = {
         Insert: {
           case_id: string
           created_at?: string
+          curated_topics?: Json | null
           date: string
           id?: string
           status?: Database["public"]["Enums"]["documentation_status"]
@@ -172,6 +174,7 @@ export type Database = {
         Update: {
           case_id?: string
           created_at?: string
+          curated_topics?: Json | null
           date?: string
           id?: string
           status?: Database["public"]["Enums"]["documentation_status"]

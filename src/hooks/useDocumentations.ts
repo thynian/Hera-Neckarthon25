@@ -37,6 +37,7 @@ export const useDocumentations = (caseId?: string) => {
         createdAt: item.created_at,
         transcriptText: item.transcript_text,
         summaryText: item.summary_text,
+        curatedTopics: item.curated_topics ? (Array.isArray(item.curated_topics) ? item.curated_topics : []) : [],
         audioFiles: (item.audio_files || []).map((af: any) => ({
           id: af.id,
           fileName: af.file_name,

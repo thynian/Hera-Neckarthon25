@@ -35,7 +35,7 @@ export const DocumentationDetail = ({
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
   const [isAddAudioOpen, setIsAddAudioOpen] = useState(false);
   const [isCuratingTopics, setIsCuratingTopics] = useState(false);
-  const [curatedTopics, setCuratedTopics] = useState<string[]>([]);
+  const [curatedTopics, setCuratedTopics] = useState<string[]>(documentation.curatedTopics || []);
   const [editingTopicIndex, setEditingTopicIndex] = useState<number | null>(null);
   const [editingTopicText, setEditingTopicText] = useState("");
   
@@ -121,7 +121,7 @@ export const DocumentationDetail = ({
     ];
     setCuratedTopics(dummyTopics);
     setIsCuratingTopics(true);
-    toast.success("Kurationg-Workflow gestartet");
+    toast.success("Themen aus Transkript vorgeschlagen");
   };
 
   const handleAddTopic = () => {
@@ -156,14 +156,8 @@ export const DocumentationDetail = ({
   };
 
   const handleFinalizeSummary = () => {
-    const summaryText = curatedTopics.join("\n\n");
-    setEditedDoc({
-      ...editedDoc,
-      summaryText
-    });
     setIsCuratingTopics(false);
-    setCuratedTopics([]);
-    toast.success("Zusammenfassung erstellt und übernommen");
+    toast.success("Themenliste gespeichert");
   };
   const handleRemoveAttachment = (attachmentId: string) => {
     setEditedDoc({
@@ -220,7 +214,21 @@ export const DocumentationDetail = ({
     }
   };
   const handleSave = () => {
-    onSave(editedDoc);
+    // Teil 1: Themenliste speichern
+    const updatedDoc = {
+      ...editedDoc,
+      curatedTopics: curatedTopics.length > 0 ? curatedTopics : editedDoc.curatedTopics,
+    };
+    
+    // Teil 2: Mock-Fließtext generieren wenn Themen vorhanden
+    if (curatedTopics.length > 0) {
+      const mockSummaryText = "Dies ist der finale, hartcodierte Endbericht, der auf den kuratierten Themen basiert:\n\n" + 
+        curatedTopics.map((topic, idx) => `${idx + 1}. ${topic}`).join("\n");
+      updatedDoc.summaryText = mockSummaryText;
+    }
+    
+    onSave(updatedDoc);
+    setEditedDoc(updatedDoc);
     toast.success("Änderungen gespeichert");
   };
   const formatFileSize = (bytes: number): string => {
@@ -347,9 +355,11 @@ export const DocumentationDetail = ({
                   </div>
                 </DialogContent>
               </Dialog>
-              <Button size="sm" variant="outline" onClick={handleStartCuration}>
-                Zusammenfassung starten
-              </Button>
+              {curatedTopics.length === 0 && (
+                <Button size="sm" variant="outline" onClick={handleStartCuration}>
+                  Themen aus Transkript vorschlagen
+                </Button>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -379,7 +389,7 @@ export const DocumentationDetail = ({
                   </div>}
                   </div>)}
 
-          {isCuratingTopics && (
+          {curatedTopics.length > 0 && (
             <div className="mt-4 p-4 border border-border rounded-md space-y-4">
               <div className="flex items-center justify-between">
                 <Label className="text-base font-semibold">Themen kuratieren</Label>
@@ -431,12 +441,12 @@ export const DocumentationDetail = ({
               </div>
 
               <Button onClick={handleFinalizeSummary} className="w-full">
-                Zusammenfassung erstellen & übernehmen
+                Themen speichern
               </Button>
             </div>
           )}
 
-          {editedDoc.summaryText && !isCuratingTopics && (
+          {editedDoc.summaryText && (
             <div className="mt-4 p-4 bg-muted rounded-md space-y-2">
               <Label htmlFor="summary">Zusammenfassung (über alle Audiodateien)</Label>
               <Textarea id="summary" value={editedDoc.summaryText} onChange={e => setEditedDoc({
