@@ -30,7 +30,7 @@ export const DocumentationDetail = ({
   audioFiles,
   onBack,
   onSave,
-  onDelete
+  onDelete,
 }: DocumentationDetailProps) => {
   const [editedDoc, setEditedDoc] = useState<Documentation>(documentation);
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
@@ -39,29 +39,31 @@ export const DocumentationDetail = ({
   const [curatedTopics, setCuratedTopics] = useState<string[]>(documentation.curatedTopics || []);
   const [editingTopicIndex, setEditingTopicIndex] = useState<number | null>(null);
   const [editingTopicText, setEditingTopicText] = useState("");
-  
+
   // Lade gespeicherte Audio-Dateien aus der Datenbank
   const { audioFiles: savedAudioFiles, isLoading: isLoadingAudio } = useAudioFiles();
-  
-  const currentCase = cases.find(c => c.id === editedDoc.caseId);
-  const currentClient = clients.find(cl => cl.id === currentCase?.clientId);
-  const availableCases = cases.filter(c => c.clientId === currentClient?.id);
-  
+
+  const currentCase = cases.find((c) => c.id === editedDoc.caseId);
+  const currentClient = clients.find((cl) => cl.id === currentCase?.clientId);
+  const availableCases = cases.filter((c) => c.clientId === currentClient?.id);
+
   // Kombiniere Audio-Dateien: bereits zugeordnete + gespeicherte ohne documentation_id
   const savedAudioFormatted: AudioFile[] = (savedAudioFiles || [])
-    .filter(af => !af.documentation_id)
-    .map(af => ({
+    .filter((af) => !af.documentation_id)
+    .map((af) => ({
       id: af.id,
       fileName: af.file_name,
       createdAt: af.created_at,
       durationMs: af.duration_ms || 0,
       blobUrl: af.file_path,
-      transcriptText: af.transcript_text || undefined
+      transcriptText: af.transcript_text || undefined,
     }));
-  
+
   // Verfügbare Audio-Dateien: alle aus Props + gespeicherte, aber nicht die bereits zugeordneten
   const allAvailableAudio = [...audioFiles, ...savedAudioFormatted];
-  const availableAudioFiles = allAvailableAudio.filter(af => !editedDoc.audioFiles.some(docAf => docAf.id === af.id));
+  const availableAudioFiles = allAvailableAudio.filter(
+    (af) => !editedDoc.audioFiles.some((docAf) => docAf.id === af.id),
+  );
   const handlePlayAudio = (audioId: string, blobUrl: string) => {
     const audio = document.getElementById(`audio-${audioId}`) as HTMLAudioElement;
     if (playingAudioId === audioId) {
@@ -79,47 +81,55 @@ export const DocumentationDetail = ({
   const handleRemoveAudio = (audioId: string) => {
     setEditedDoc({
       ...editedDoc,
-      audioFiles: editedDoc.audioFiles.filter(af => af.id !== audioId)
+      audioFiles: editedDoc.audioFiles.filter((af) => af.id !== audioId),
     });
     toast.success("Audiodatei entfernt");
   };
   const handleUpdateTranscript = (audioId: string, newTranscript: string) => {
     setEditedDoc({
       ...editedDoc,
-      audioFiles: editedDoc.audioFiles.map(af => af.id === audioId ? {
-        ...af,
-        transcriptText: newTranscript
-      } : af)
+      audioFiles: editedDoc.audioFiles.map((af) =>
+        af.id === audioId
+          ? {
+              ...af,
+              transcriptText: newTranscript,
+            }
+          : af,
+      ),
     });
   };
   const handleAddAudio = (audioFile: AudioFile) => {
     setEditedDoc({
       ...editedDoc,
-      audioFiles: [...editedDoc.audioFiles, audioFile]
+      audioFiles: [...editedDoc.audioFiles, audioFile],
     });
     setIsAddAudioOpen(false);
     toast.success("Audiodatei hinzugefügt");
   };
   const handleTranscribe = (audioId: string) => {
-    const newTranscript = "Dies ist ein Beispiel-Protokoll (Mock). In der echten Implementierung würde hier der transkribierte Text der Audiodateien erscheinen.";
+    const newTranscript =
+      "Dies ist ein Beispiel-Protokoll (Mock). In der echten Implementierung würde hier der transkribierte Text der Audiodateien erscheinen.";
     setEditedDoc({
       ...editedDoc,
-      audioFiles: editedDoc.audioFiles.map(af => af.id === audioId ? {
-        ...af,
-        transcriptText: af.transcriptText ? `${af.transcriptText}\n\n---\n\n${newTranscript}` : newTranscript
-      } : af),
-      status: editedDoc.status === "OPEN" ? "IN_REVIEW" : editedDoc.status
+      audioFiles: editedDoc.audioFiles.map((af) =>
+        af.id === audioId
+          ? {
+              ...af,
+              transcriptText: af.transcriptText ? `${af.transcriptText}\n\n---\n\n${newTranscript}` : newTranscript,
+            }
+          : af,
+      ),
+      status: editedDoc.status === "OPEN" ? "IN_REVIEW" : editedDoc.status,
     });
     toast.success("Protokollion erstellt (Mock)");
   };
   const handleStartCuration = () => {
     const dummyTopics = [
-      """Dummy-Thema 1: Budget
-      dwadwadw""",
+      "Dummy-Thema 1: Budget" + "abc",
       "Dummy-Thema 2: Zeitplan",
       "Dummy-Thema 3: Offene Punkte",
       "Dummy-Thema 4: Nächste Schritte",
-      "Dummy-Thema 5: Personalmangel"
+      "Dummy-Thema 5: Personalmangel",
     ];
     setCuratedTopics(dummyTopics);
     setIsCuratingTopics(true);
@@ -160,9 +170,9 @@ export const DocumentationDetail = ({
   const handleFinalizeSummary = async () => {
     try {
       toast.loading("Generiere Zusammenfassung...", { id: "summary-generation" });
-      
-      const { data, error } = await supabase.functions.invoke('generate-summary', {
-        body: { topics: curatedTopics }
+
+      const { data, error } = await supabase.functions.invoke("generate-summary", {
+        body: { topics: curatedTopics },
       });
 
       if (error) {
@@ -179,9 +189,9 @@ export const DocumentationDetail = ({
       const updatedDoc = {
         ...editedDoc,
         summaryText: data.summary,
-        curatedTopics: curatedTopics
+        curatedTopics: curatedTopics,
       };
-      
+
       setEditedDoc(updatedDoc);
       onSave(updatedDoc);
       setIsCuratingTopics(false);
@@ -194,47 +204,47 @@ export const DocumentationDetail = ({
   const handleRemoveAttachment = (attachmentId: string) => {
     setEditedDoc({
       ...editedDoc,
-      attachments: editedDoc.attachments.filter(att => att.id !== attachmentId)
+      attachments: editedDoc.attachments.filter((att) => att.id !== attachmentId),
     });
     toast.success("Anhang entfernt");
   };
   const handleAddAttachment = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files) return;
-    const newAttachments: Attachment[] = Array.from(files).map(file => ({
+    const newAttachments: Attachment[] = Array.from(files).map((file) => ({
       id: generateId("att-"),
       fileName: file.name,
       fileType: file.type,
       size: file.size,
-      blobUrl: URL.createObjectURL(file)
+      blobUrl: URL.createObjectURL(file),
     }));
     setEditedDoc({
       ...editedDoc,
-      attachments: [...editedDoc.attachments, ...newAttachments]
+      attachments: [...editedDoc.attachments, ...newAttachments],
     });
     toast.success(`${newAttachments.length} Datei(en) hinzugefügt`);
     event.target.value = "";
   };
   const handleClientChange = (clientId: string) => {
-    const clientCases = cases.filter(c => c.clientId === clientId);
+    const clientCases = cases.filter((c) => c.clientId === clientId);
     if (clientCases.length > 0) {
       setEditedDoc({
         ...editedDoc,
-        caseId: clientCases[0].id
+        caseId: clientCases[0].id,
       });
     }
   };
   const handleMarkAsVerified = () => {
     setEditedDoc({
       ...editedDoc,
-      status: "VERIFIED"
+      status: "VERIFIED",
     });
     toast.success("Dokumentation als fertig markiert");
   };
   const handleMarkAsInReview = () => {
     setEditedDoc({
       ...editedDoc,
-      status: "IN_REVIEW"
+      status: "IN_REVIEW",
     });
     toast.success("Dokumentation zurück in Überprüfung gesetzt");
   };
@@ -250,7 +260,7 @@ export const DocumentationDetail = ({
       ...editedDoc,
       curatedTopics: curatedTopics.length > 0 ? curatedTopics : editedDoc.curatedTopics,
     };
-    
+
     onSave(updatedDoc);
     setEditedDoc(updatedDoc);
     setIsCuratingTopics(false);
@@ -267,7 +277,8 @@ export const DocumentationDetail = ({
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
-  return <div className="space-y-6">
+  return (
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={onBack}>
@@ -282,16 +293,22 @@ export const DocumentationDetail = ({
         </div>
         <div className="flex items-center gap-2">
           <DocumentationStatusBadge status={editedDoc.status} />
-          {editedDoc.status !== "VERIFIED" && <Button size="sm" onClick={handleMarkAsVerified}>
+          {editedDoc.status !== "VERIFIED" && (
+            <Button size="sm" onClick={handleMarkAsVerified}>
               Fertig
-            </Button>}
-          {editedDoc.status === "VERIFIED" && <Button size="sm" variant="outline" onClick={handleMarkAsInReview}>
+            </Button>
+          )}
+          {editedDoc.status === "VERIFIED" && (
+            <Button size="sm" variant="outline" onClick={handleMarkAsInReview}>
               Zurück in Überprüfung
-            </Button>}
-          {onDelete && <Button size="sm" variant="destructive" onClick={handleDelete}>
+            </Button>
+          )}
+          {onDelete && (
+            <Button size="sm" variant="destructive" onClick={handleDelete}>
               <Trash2 className="h-4 w-4 mr-1" />
               Löschen
-            </Button>}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -303,10 +320,17 @@ export const DocumentationDetail = ({
         <CardContent className="space-y-4">
           <div>
             <Label htmlFor="title">Titel</Label>
-            <Input id="title" value={editedDoc.title} onChange={e => setEditedDoc({
-            ...editedDoc,
-            title: e.target.value
-          })} placeholder="Titel der Dokumentation" />
+            <Input
+              id="title"
+              value={editedDoc.title}
+              onChange={(e) =>
+                setEditedDoc({
+                  ...editedDoc,
+                  title: e.target.value,
+                })
+              }
+              placeholder="Titel der Dokumentation"
+            />
           </div>
 
           <div>
@@ -316,36 +340,52 @@ export const DocumentationDetail = ({
                 <SelectValue placeholder="Client auswählen" />
               </SelectTrigger>
               <SelectContent>
-                {clients.map(client => <SelectItem key={client.id} value={client.id}>
+                {clients.map((client) => (
+                  <SelectItem key={client.id} value={client.id}>
                     {client.name}
-                  </SelectItem>)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
           <div>
             <Label htmlFor="case">Fall</Label>
-            <Select value={editedDoc.caseId} onValueChange={caseId => setEditedDoc({
-            ...editedDoc,
-            caseId
-          })}>
+            <Select
+              value={editedDoc.caseId}
+              onValueChange={(caseId) =>
+                setEditedDoc({
+                  ...editedDoc,
+                  caseId,
+                })
+              }
+            >
               <SelectTrigger id="case">
                 <SelectValue placeholder="Fall auswählen" />
               </SelectTrigger>
               <SelectContent>
-                {availableCases.map(caseItem => <SelectItem key={caseItem.id} value={caseItem.id}>
+                {availableCases.map((caseItem) => (
+                  <SelectItem key={caseItem.id} value={caseItem.id}>
                     {caseItem.caseId} - {caseItem.title}
-                  </SelectItem>)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
           <div>
             <Label htmlFor="date">Termin</Label>
-            <Input id="date" type="datetime-local" value={editedDoc.date.slice(0, 16)} onChange={e => setEditedDoc({
-            ...editedDoc,
-            date: new Date(e.target.value).toISOString()
-          })} />
+            <Input
+              id="date"
+              type="datetime-local"
+              value={editedDoc.date.slice(0, 16)}
+              onChange={(e) =>
+                setEditedDoc({
+                  ...editedDoc,
+                  date: new Date(e.target.value).toISOString(),
+                })
+              }
+            />
           </div>
         </CardContent>
       </Card>
@@ -368,7 +408,14 @@ export const DocumentationDetail = ({
                     <DialogTitle>Audio-Datei hinzufügen</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {availableAudioFiles.length === 0 ? <p className="text-center text-muted-foreground py-8">Keine weiteren Audio-Dateien verfügbar</p> : availableAudioFiles.map(af => <div key={af.id} className="flex items-center justify-between p-3 border border-border rounded-md">
+                    {availableAudioFiles.length === 0 ? (
+                      <p className="text-center text-muted-foreground py-8">Keine weiteren Audio-Dateien verfügbar</p>
+                    ) : (
+                      availableAudioFiles.map((af) => (
+                        <div
+                          key={af.id}
+                          className="flex items-center justify-between p-3 border border-border rounded-md"
+                        >
                           <div>
                             <p className="font-medium text-sm">{af.fileName}</p>
                             <p className="text-xs text-muted-foreground">{formatDuration(af.durationMs)}</p>
@@ -376,7 +423,9 @@ export const DocumentationDetail = ({
                           <Button size="sm" onClick={() => handleAddAudio(af)}>
                             Hinzufügen
                           </Button>
-                        </div>)}
+                        </div>
+                      ))
+                    )}
                   </div>
                 </DialogContent>
               </Dialog>
@@ -395,30 +444,59 @@ export const DocumentationDetail = ({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {editedDoc.audioFiles.length === 0 ? <p className="text-center text-muted-foreground py-8">Keine Audio-Dateien vorhanden</p> : editedDoc.audioFiles.map(audioFile => <div key={audioFile.id} className="space-y-3 p-4 border border-border rounded-md">
+          {editedDoc.audioFiles.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">Keine Audio-Dateien vorhanden</p>
+          ) : (
+            editedDoc.audioFiles.map((audioFile) => (
+              <div key={audioFile.id} className="space-y-3 p-4 border border-border rounded-md">
                 <div className="flex items-center gap-4">
                   <div className="flex-1">
                     <p className="font-medium">{audioFile.fileName}</p>
                     <p className="text-sm text-muted-foreground">Dauer: {formatDuration(audioFile.durationMs)}</p>
-                    <audio id={`audio-${audioFile.id}`} src={audioFile.blobUrl} onEnded={() => setPlayingAudioId(null)} className="hidden" />
+                    <audio
+                      id={`audio-${audioFile.id}`}
+                      src={audioFile.blobUrl}
+                      onEnded={() => setPlayingAudioId(null)}
+                      className="hidden"
+                    />
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => handlePlayAudio(audioFile.id, audioFile.blobUrl)}>
-                      {playingAudioId === audioFile.id ? <Pause className="h-4 w-4 mr-1" /> : <Play className="h-4 w-4 mr-1" />}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handlePlayAudio(audioFile.id, audioFile.blobUrl)}
+                    >
+                      {playingAudioId === audioFile.id ? (
+                        <Pause className="h-4 w-4 mr-1" />
+                      ) : (
+                        <Play className="h-4 w-4 mr-1" />
+                      )}
                       {playingAudioId === audioFile.id ? "Stop" : "Abspielen"}
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleTranscribe(audioFile.id)}>Protokoll</Button>
+                    <Button size="sm" variant="outline" onClick={() => handleTranscribe(audioFile.id)}>
+                      Protokoll
+                    </Button>
                     <Button size="sm" variant="destructive" onClick={() => handleRemoveAudio(audioFile.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
 
-                {audioFile.transcriptText && <div className="mt-3 space-y-2">
+                {audioFile.transcriptText && (
+                  <div className="mt-3 space-y-2">
                     <Label htmlFor={`transcript-${audioFile.id}`}>Protokoll</Label>
-                    <Textarea id={`transcript-${audioFile.id}`} value={audioFile.transcriptText} onChange={e => handleUpdateTranscript(audioFile.id, e.target.value)} rows={8} className="font-mono text-sm" />
-                  </div>}
-                  </div>)}
+                    <Textarea
+                      id={`transcript-${audioFile.id}`}
+                      value={audioFile.transcriptText}
+                      onChange={(e) => handleUpdateTranscript(audioFile.id, e.target.value)}
+                      rows={8}
+                      className="font-mono text-sm"
+                    />
+                  </div>
+                )}
+              </div>
+            ))
+          )}
 
           {curatedTopics.length > 0 && isCuratingTopics && (
             <div className="mt-4 p-4 border border-border rounded-md space-y-4">
@@ -429,7 +507,7 @@ export const DocumentationDetail = ({
                   Thema hinzufügen
                 </Button>
               </div>
-              
+
               <div className="space-y-2">
                 {curatedTopics.map((topic, index) => (
                   <div key={index} className="flex items-center gap-2 p-3 bg-muted rounded-md">
@@ -451,18 +529,10 @@ export const DocumentationDetail = ({
                     ) : (
                       <>
                         <span className="flex-1 text-sm">{topic}</span>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleStartEditTopic(index)}
-                        >
+                        <Button size="sm" variant="ghost" onClick={() => handleStartEditTopic(index)}>
                           <Edit2 className="h-4 w-4" />
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDeleteTopic(index)}
-                        >
+                        <Button size="sm" variant="ghost" onClick={() => handleDeleteTopic(index)}>
                           <X className="h-4 w-4" />
                         </Button>
                       </>
@@ -480,10 +550,18 @@ export const DocumentationDetail = ({
           {editedDoc.summaryText && (
             <div className="mt-4 p-4 bg-muted rounded-md space-y-2">
               <Label htmlFor="summary">Zusammenfassung (über alle Audiodateien)</Label>
-              <Textarea id="summary" value={editedDoc.summaryText} onChange={e => setEditedDoc({
-            ...editedDoc,
-            summaryText: e.target.value
-          })} rows={6} className="text-sm" />
+              <Textarea
+                id="summary"
+                value={editedDoc.summaryText}
+                onChange={(e) =>
+                  setEditedDoc({
+                    ...editedDoc,
+                    summaryText: e.target.value,
+                  })
+                }
+                rows={6}
+                className="text-sm"
+              />
             </div>
           )}
         </CardContent>
@@ -498,14 +576,28 @@ export const DocumentationDetail = ({
               <label htmlFor="attachment-upload" className="cursor-pointer">
                 <Plus className="h-4 w-4 mr-1" />
                 Datei anhängen
-                <input id="attachment-upload" type="file" multiple accept=".pdf,.txt,.docx" onChange={handleAddAttachment} className="hidden" />
+                <input
+                  id="attachment-upload"
+                  type="file"
+                  multiple
+                  accept=".pdf,.txt,.docx"
+                  onChange={handleAddAttachment}
+                  className="hidden"
+                />
               </label>
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          {editedDoc.attachments.length === 0 ? <p className="text-center text-muted-foreground py-8">Keine Anhänge vorhanden</p> : <div className="space-y-2">
-              {editedDoc.attachments.map(attachment => <div key={attachment.id} className="flex items-center justify-between p-3 border border-border rounded-md">
+          {editedDoc.attachments.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">Keine Anhänge vorhanden</p>
+          ) : (
+            <div className="space-y-2">
+              {editedDoc.attachments.map((attachment) => (
+                <div
+                  key={attachment.id}
+                  className="flex items-center justify-between p-3 border border-border rounded-md"
+                >
                   <div className="flex items-center gap-3">
                     <FileText className="h-5 w-5 text-muted-foreground" />
                     <div>
@@ -525,8 +617,10 @@ export const DocumentationDetail = ({
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                </div>)}
-            </div>}
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -536,10 +630,17 @@ export const DocumentationDetail = ({
           <CardTitle>ToDos</CardTitle>
         </CardHeader>
         <CardContent>
-          <Textarea value={editedDoc.todos} onChange={e => setEditedDoc({
-          ...editedDoc,
-          todos: e.target.value
-        })} placeholder="Ein ToDo pro Zeile..." rows={6} />
+          <Textarea
+            value={editedDoc.todos}
+            onChange={(e) =>
+              setEditedDoc({
+                ...editedDoc,
+                todos: e.target.value,
+              })
+            }
+            placeholder="Ein ToDo pro Zeile..."
+            rows={6}
+          />
           <p className="text-xs text-muted-foreground mt-2">Tipp: Schreiben Sie jedes ToDo in eine neue Zeile</p>
         </CardContent>
       </Card>
@@ -551,5 +652,6 @@ export const DocumentationDetail = ({
         </Button>
         <Button onClick={handleSave}>Änderungen speichern</Button>
       </div>
-    </div>;
+    </div>
+  );
 };
