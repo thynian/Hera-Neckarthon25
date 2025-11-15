@@ -419,7 +419,7 @@ export const DocumentationDetail = ({
                   </div>}
                   </div>)}
 
-          {editedDoc.audioFiles.length > 0 && curatedTopics.length > 0 && isCuratingTopics && (
+          {curatedTopics.length > 0 && isCuratingTopics && (
             <div className="mt-4 p-4 border border-border rounded-md space-y-4">
               <div className="flex items-center justify-between">
                 <Label className="text-base font-semibold">Themen kuratieren</Label>
@@ -476,7 +476,7 @@ export const DocumentationDetail = ({
             </div>
           )}
 
-          {editedDoc.audioFiles.length > 0 && editedDoc.summaryText && (
+          {editedDoc.summaryText && (
             <div className="mt-4 p-4 bg-muted rounded-md space-y-2">
               <Label htmlFor="summary">Zusammenfassung (über alle Audiodateien)</Label>
               <Textarea id="summary" value={editedDoc.summaryText} onChange={e => setEditedDoc({
