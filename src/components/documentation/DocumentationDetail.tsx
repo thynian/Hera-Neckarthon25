@@ -125,8 +125,7 @@ export const DocumentationDetail = ({
   };
   const handleStartCuration = () => {
     const dummyTopics = [
-      "Cybermobbing in der Klasse und online:\nBeleidigende Nachrichten über WhatsApp und Instagram, Ausschluss aus der Klassengemeinschaft, emotionale Belastung.\nSammlung von Beispielen, Verständnis der Situation und erste Schutzmaßnahmen (Blockieren, Melden).
-",
+      "Cybermobbing in der Klasse und online:\nBeleidigende Nachrichten über WhatsApp und Instagram, Ausschluss aus der Klassengemeinschaft, emotionale Belastung.\nSammlung von Beispielen, Verständnis der Situation und erste Schutzmaßnahmen (Blockieren, Melden).",
       "Dummy-Thema 2: Zeitplan",
       "Dummy-Thema 3: Offene Punkte",
       "Dummy-Thema 4: Nächste Schritte",
