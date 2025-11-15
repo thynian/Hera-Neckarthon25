@@ -32,6 +32,7 @@ export const Dashboard = () => {
     if (updatedDoc.status !== undefined) updates.status = updatedDoc.status;
     if ((updatedDoc as any).transcriptText !== undefined) updates.transcript_text = (updatedDoc as any).transcriptText;
     if ((updatedDoc as any).summaryText !== undefined) updates.summary_text = (updatedDoc as any).summaryText;
+    if (updatedDoc.curatedTopics !== undefined) updates.curated_topics = updatedDoc.curatedTopics;
     await updateDocumentation({
       id: updatedDoc.id,
       updates,

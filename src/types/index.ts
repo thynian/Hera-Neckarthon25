@@ -44,6 +44,7 @@ export type Documentation = {
   attachments: Attachment[];
   todos: string; // Freitext, ein ToDo pro Zeile
   summaryText?: string;
+  curatedTopics?: string[]; // Liste der bearbeiteten Themen
   status: DocumentationStatus;
   createdAt: string;
 };
