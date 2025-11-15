@@ -3,14 +3,30 @@ import { Mic, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RecordingDialog } from "@/components/audio/RecordingDialog";
-import { AudioFile } from "@/types";
+import { NewDocumentationDialog } from "@/components/documentation/NewDocumentationDialog";
+import { AudioFile, Client, Case, Documentation } from "@/types";
 
 interface DashboardActionsProps {
+  clients: Client[];
+  setClients: React.Dispatch<React.SetStateAction<Client[]>>;
+  cases: Case[];
+  setCases: React.Dispatch<React.SetStateAction<Case[]>>;
+  audioFiles: AudioFile[];
   setAudioFiles: React.Dispatch<React.SetStateAction<AudioFile[]>>;
+  onSaveDocumentation: (documentation: Documentation) => void;
 }
 
-export const DashboardActions = ({ setAudioFiles }: DashboardActionsProps) => {
+export const DashboardActions = ({
+  clients,
+  setClients,
+  cases,
+  setCases,
+  audioFiles,
+  setAudioFiles,
+  onSaveDocumentation,
+}: DashboardActionsProps) => {
   const [showRecordingDialog, setShowRecordingDialog] = useState(false);
+  const [showDocumentationDialog, setShowDocumentationDialog] = useState(false);
 
   const handleStartRecording = () => {
     setShowRecordingDialog(true);
@@ -22,7 +38,7 @@ export const DashboardActions = ({ setAudioFiles }: DashboardActionsProps) => {
   };
 
   const handleNewDocumentation = () => {
-    console.log("Neue Dokumentation anlegen - noch nicht implementiert");
+    setShowDocumentationDialog(true);
   };
 
   return (
@@ -58,6 +74,17 @@ export const DashboardActions = ({ setAudioFiles }: DashboardActionsProps) => {
         open={showRecordingDialog}
         onOpenChange={setShowRecordingDialog}
         onSave={handleSaveAudio}
+      />
+
+      <NewDocumentationDialog
+        open={showDocumentationDialog}
+        onOpenChange={setShowDocumentationDialog}
+        clients={clients}
+        setClients={setClients}
+        cases={cases}
+        setCases={setCases}
+        audioFiles={audioFiles}
+        onSave={onSaveDocumentation}
       />
     </>
   );

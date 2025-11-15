@@ -33,8 +33,11 @@ const contentMap: Record<TabType, { title: string; description: string }> = {
 export const ContentArea = ({
   activeTab,
   clients,
+  setClients,
   cases,
+  setCases,
   documentations,
+  setDocumentations,
   audioFiles,
   setAudioFiles,
 }: ContentAreaProps) => {
@@ -55,8 +58,11 @@ export const ContentArea = ({
         {activeTab === "offen" ? (
           <Dashboard
             clients={clients}
+            setClients={setClients}
             cases={cases}
+            setCases={setCases}
             documentations={documentations}
+            setDocumentations={setDocumentations}
             audioFiles={audioFiles}
             setAudioFiles={setAudioFiles}
           />
