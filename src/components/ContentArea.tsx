@@ -66,7 +66,8 @@ export const ContentArea = ({ activeTab }: ContentAreaProps) => {
             clients={clients}
             cases={cases}
             documentations={documentations}
-            setDocumentations={setDocumentations}
+            updateDocumentation={updateDocumentation}
+            deleteDocumentation={deleteDocumentation}
             audioFiles={audioFiles}
           />
         ) : (
