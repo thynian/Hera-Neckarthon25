@@ -14,8 +14,6 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Mic, Pause, Play, Square, Save, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
 
 interface RecordingDialogProps {
   open: boolean;
@@ -43,8 +41,6 @@ export const RecordingDialog = ({
 
   const [fileName, setFileName] = useState("");
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
-  const [isTranscribing, setIsTranscribing] = useState(false);
-  const { toast } = useToast();
 
   // Generate blob URL when recording is stopped
   useEffect(() => {
@@ -67,58 +63,19 @@ export const RecordingDialog = ({
     };
   }, [blobUrl]);
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!audioBlob || !blobUrl) return;
 
-    setIsTranscribing(true);
+    const audioFile: AudioFile = {
+      id: `audio-${Date.now()}`,
+      fileName: fileName || `aufnahme_${Date.now()}.webm`,
+      createdAt: new Date().toISOString(),
+      durationMs: recordingTime * 1000,
+      blobUrl,
+    };
 
-    try {
-      // Rufe Backend-Funktion für Mock-Transkription auf
-      const { data, error } = await supabase.functions.invoke('transcribe-audio', {
-        body: {
-          fileName: fileName || `aufnahme_${Date.now()}.webm`,
-          durationMs: recordingTime * 1000,
-        }
-      });
-
-      if (error) {
-        console.error('Fehler bei der Transkription:', error);
-        toast({
-          title: "Fehler",
-          description: "Transkription konnte nicht erstellt werden",
-          variant: "destructive",
-        });
-      }
-
-      const audioFile: AudioFile = {
-        id: `audio-${Date.now()}`,
-        fileName: fileName || `aufnahme_${Date.now()}.webm`,
-        createdAt: new Date().toISOString(),
-        durationMs: recordingTime * 1000,
-        blobUrl,
-        transcriptText: data?.transcriptText,
-      };
-
-      onSave(audioFile);
-      
-      if (data?.transcriptText) {
-        toast({
-          title: "Erfolg",
-          description: "Audio gespeichert und transkribiert",
-        });
-      }
-      
-      handleClose();
-    } catch (err) {
-      console.error('Fehler beim Speichern:', err);
-      toast({
-        title: "Fehler",
-        description: "Audio konnte nicht gespeichert werden",
-        variant: "destructive",
-      });
-    } finally {
-      setIsTranscribing(false);
-    }
+    onSave(audioFile);
+    handleClose();
   };
 
   const handleClose = () => {
@@ -225,9 +182,9 @@ export const RecordingDialog = ({
             <Button variant="outline" onClick={handleClose}>
               Abbrechen
             </Button>
-            <Button onClick={handleSave} disabled={!audioBlob || isTranscribing}>
+            <Button onClick={handleSave} disabled={!audioBlob}>
               <Save className="mr-2 h-4 w-4" />
-              {isTranscribing ? "Transkribiere..." : "Speichern"}
+              Speichern
             </Button>
           </DialogFooter>
         )}
