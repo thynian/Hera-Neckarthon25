@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Play, Pause, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -24,6 +25,7 @@ type TeamLevel = "clients" | "cases" | "docs" | "docDetail";
 
 export const TeamArea = ({ clients, cases, documentations }: TeamAreaProps) => {
   const [teamSearch, setTeamSearch] = useState("");
+  const [teamActiveTab, setTeamActiveTab] = useState<"clients" | "cases" | "docs">("clients");
   const [teamLevel, setTeamLevel] = useState<TeamLevel>("clients");
   const [selectedClientId, setSelectedClientId] = useState<string | undefined>();
   const [selectedCaseId, setSelectedCaseId] = useState<string | undefined>();
@@ -65,6 +67,16 @@ export const TeamArea = ({ clients, cases, documentations }: TeamAreaProps) => {
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
+  // Tab handlers
+  const handleTabChange = (value: string) => {
+    const tab = value as "clients" | "cases" | "docs";
+    setTeamActiveTab(tab);
+    setTeamLevel(tab);
+    setSelectedClientId(undefined);
+    setSelectedCaseId(undefined);
+    setSelectedDocumentationId(undefined);
+  };
+
   // Navigation handlers
   const handleClientClick = (clientId: string) => {
     setSelectedClientId(clientId);
@@ -73,19 +85,31 @@ export const TeamArea = ({ clients, cases, documentations }: TeamAreaProps) => {
     setTeamLevel("cases");
   };
 
-  const handleCaseClick = (caseId: string) => {
+  const handleCaseClick = (caseId: string, clientId?: string) => {
+    if (clientId) {
+      setSelectedClientId(clientId);
+    }
     setSelectedCaseId(caseId);
     setSelectedDocumentationId(undefined);
     setTeamLevel("docs");
   };
 
-  const handleDocumentationClick = (docId: string) => {
-    setSelectedDocumentationId(docId);
-    setTeamLevel("docDetail");
+  const handleDocumentationClick = (docId: string, caseId?: string) => {
+    const doc = documentations.find((d) => d.id === docId);
+    if (doc) {
+      setSelectedDocumentationId(docId);
+      setSelectedCaseId(doc.caseId);
+      const relatedCase = cases.find((c) => c.id === doc.caseId);
+      if (relatedCase) {
+        setSelectedClientId(relatedCase.clientId);
+      }
+      setTeamLevel("docDetail");
+    }
   };
 
   const handleBreadcrumbClients = () => {
     setTeamLevel("clients");
+    setTeamActiveTab("clients");
     setSelectedClientId(undefined);
     setSelectedCaseId(undefined);
     setSelectedDocumentationId(undefined);
@@ -107,25 +131,47 @@ export const TeamArea = ({ clients, cases, documentations }: TeamAreaProps) => {
     client.name.toLowerCase().includes(teamSearch.toLowerCase())
   );
 
+  const filteredCases = cases.filter((caseItem) => {
+    const searchLower = teamSearch.toLowerCase();
+    const clientName = getClientName(caseItem.clientId);
+    return (
+      caseItem.title.toLowerCase().includes(searchLower) ||
+      caseItem.caseId.toLowerCase().includes(searchLower) ||
+      clientName.toLowerCase().includes(searchLower)
+    );
+  });
+
+  const filteredDocumentations = documentations.filter((doc) => {
+    const searchLower = teamSearch.toLowerCase();
+    const relatedCase = cases.find((c) => c.id === doc.caseId);
+    const clientName = relatedCase ? getClientName(relatedCase.clientId) : "";
+    return (
+      doc.title.toLowerCase().includes(searchLower) ||
+      relatedCase?.title.toLowerCase().includes(searchLower) ||
+      relatedCase?.caseId.toLowerCase().includes(searchLower) ||
+      clientName.toLowerCase().includes(searchLower)
+    );
+  });
+
   // Selected entities
   const selectedClient = clients.find((c) => c.id === selectedClientId);
   const selectedCase = cases.find((c) => c.id === selectedCaseId);
   const selectedDocumentation = documentations.find((d) => d.id === selectedDocumentationId);
 
-  // Render views based on level
+  // Render content based on level
   const renderContent = () => {
     // Client List View
     if (teamLevel === "clients") {
       return (
         <Card>
           <CardHeader className="p-3 sm:p-6">
-            <CardTitle className="text-base sm:text-lg">Clienten ({filteredClients.length})</CardTitle>
+            <CardTitle className="text-base sm:text-lg">Klienten ({filteredClients.length})</CardTitle>
           </CardHeader>
           <CardContent className="p-3 sm:p-6 pt-0">
             <div className="space-y-2">
               {filteredClients.length === 0 ? (
                 <p className="text-center text-sm text-muted-foreground py-8">
-                  Keine Clienten gefunden
+                  Keine Klienten gefunden
                 </p>
               ) : (
                 filteredClients.map((client) => (
@@ -147,41 +193,49 @@ export const TeamArea = ({ clients, cases, documentations }: TeamAreaProps) => {
       );
     }
 
-    // Case List View for selected client
-    if (teamLevel === "cases" && selectedClient) {
-      const clientCases = getCasesForClient(selectedClient.id);
-      const filteredCases = clientCases.filter((caseItem) =>
-        caseItem.title.toLowerCase().includes(teamSearch.toLowerCase()) ||
-        caseItem.caseId.toLowerCase().includes(teamSearch.toLowerCase())
-      );
+    // Case List View (either for selected client or all cases)
+    if (teamLevel === "cases") {
+      const casesToShow = selectedClient 
+        ? getCasesForClient(selectedClient.id).filter((caseItem) =>
+            caseItem.title.toLowerCase().includes(teamSearch.toLowerCase()) ||
+            caseItem.caseId.toLowerCase().includes(teamSearch.toLowerCase())
+          )
+        : filteredCases;
+
+      const title = selectedClient 
+        ? `Fälle von ${selectedClient.name}`
+        : "Alle Fälle";
 
       return (
         <Card>
           <CardHeader className="p-3 sm:p-6">
-            <CardTitle className="text-base sm:text-lg">
-              Fälle von {selectedClient.name}
-            </CardTitle>
+            <CardTitle className="text-base sm:text-lg">{title}</CardTitle>
             <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-              {filteredCases.length} Fälle gefunden
+              {casesToShow.length} Fälle gefunden
             </p>
           </CardHeader>
           <CardContent className="p-3 sm:p-6 pt-0">
             <div className="space-y-2">
-              {filteredCases.length === 0 ? (
+              {casesToShow.length === 0 ? (
                 <p className="text-center text-sm text-muted-foreground py-8">
                   Keine Fälle gefunden
                 </p>
               ) : (
-                filteredCases.map((caseItem) => (
+                casesToShow.map((caseItem) => (
                   <div
                     key={caseItem.id}
-                    onClick={() => handleCaseClick(caseItem.id)}
+                    onClick={() => handleCaseClick(caseItem.id, caseItem.clientId)}
                     className="p-3 border rounded-lg cursor-pointer transition-colors border-border hover:bg-accent/50 min-h-[44px]"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm truncate">{caseItem.title}</p>
                         <p className="text-xs text-muted-foreground">{caseItem.caseId}</p>
+                        {!selectedClient && (
+                          <p className="text-xs text-muted-foreground">
+                            Klient: {getClientName(caseItem.clientId)}
+                          </p>
+                        )}
                         <p className="text-xs text-muted-foreground">
                           Erstellt: {new Date(caseItem.createdAt).toLocaleDateString("de-DE")}
                         </p>
@@ -199,49 +253,67 @@ export const TeamArea = ({ clients, cases, documentations }: TeamAreaProps) => {
       );
     }
 
-    // Documentation List View for selected case
-    if (teamLevel === "docs" && selectedClient && selectedCase) {
-      const caseDocs = getDocumentationsForCase(selectedCase.id);
-      const filteredDocs = caseDocs.filter((doc) =>
-        doc.title.toLowerCase().includes(teamSearch.toLowerCase())
-      );
+    // Documentation List View (either for selected case or all docs)
+    if (teamLevel === "docs") {
+      const docsToShow = selectedCase
+        ? getDocumentationsForCase(selectedCase.id).filter((doc) =>
+            doc.title.toLowerCase().includes(teamSearch.toLowerCase())
+          )
+        : filteredDocumentations;
+
+      const title = selectedCase
+        ? `Dokumentationen für Fall: ${selectedCase.title}`
+        : "Alle Dokumentationen";
 
       return (
         <Card>
           <CardHeader className="p-3 sm:p-6">
-            <CardTitle className="text-base sm:text-lg">
-              Dokumentationen für Fall: {selectedCase.title}
-            </CardTitle>
+            <CardTitle className="text-base sm:text-lg">{title}</CardTitle>
             <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-              {filteredDocs.length} Dokumentationen gefunden
+              {docsToShow.length} Dokumentationen gefunden
             </p>
           </CardHeader>
           <CardContent className="p-3 sm:p-6 pt-0">
             <div className="space-y-2">
-              {filteredDocs.length === 0 ? (
+              {docsToShow.length === 0 ? (
                 <p className="text-center text-sm text-muted-foreground py-8">
                   Keine Dokumentationen gefunden
                 </p>
               ) : (
-                filteredDocs.map((doc) => (
-                  <div
-                    key={doc.id}
-                    onClick={() => handleDocumentationClick(doc.id)}
-                    className="p-3 border rounded-lg cursor-pointer transition-colors border-border hover:bg-accent/50 min-h-[44px]"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">{doc.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(doc.date).toLocaleDateString("de-DE")}
-                        </p>
+                docsToShow.map((doc) => {
+                  const relatedCase = cases.find((c) => c.id === doc.caseId);
+                  const clientName = relatedCase ? getClientName(relatedCase.clientId) : "";
+                  
+                  return (
+                    <div
+                      key={doc.id}
+                      onClick={() => handleDocumentationClick(doc.id, doc.caseId)}
+                      className="p-3 border rounded-lg cursor-pointer transition-colors border-border hover:bg-accent/50 min-h-[44px]"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{doc.title}</p>
+                          {!selectedCase && (
+                            <>
+                              <p className="text-xs text-muted-foreground">
+                                Fall: {relatedCase?.title || "Unbekannt"}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                Klient: {clientName}
+                              </p>
+                            </>
+                          )}
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(doc.date).toLocaleDateString("de-DE")}
+                          </p>
+                        </div>
+                        <Badge variant={doc.status === "OPEN" ? "secondary" : "outline"}>
+                          {doc.status}
+                        </Badge>
                       </div>
-                      <Badge variant={doc.status === "OPEN" ? "secondary" : "outline"}>
-                        {doc.status}
-                      </Badge>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </CardContent>
@@ -262,7 +334,7 @@ export const TeamArea = ({ clients, cases, documentations }: TeamAreaProps) => {
             {/* Context info bar */}
             <div className="flex flex-wrap gap-2 sm:gap-4 text-xs text-muted-foreground pb-2 sm:pb-3 border-b">
               <span>
-                <span className="font-medium">Client:</span> {selectedClient.name}
+                <span className="font-medium">Klient:</span> {selectedClient.name}
               </span>
               <span>
                 <span className="font-medium">Fall:</span> {selectedCase.title}
@@ -355,12 +427,12 @@ export const TeamArea = ({ clients, cases, documentations }: TeamAreaProps) => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-3 sm:px-4 lg:px-6 space-y-4 sm:space-y-6">
+    <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-1 sm:mb-2">Team Bereich</h1>
         <p className="text-sm sm:text-base text-muted-foreground">
-          Navigieren Sie durch Clienten, Fälle und Dokumentationen
+          Navigieren Sie durch Klienten, Fälle und Dokumentationen
         </p>
       </div>
 
@@ -373,15 +445,24 @@ export const TeamArea = ({ clients, cases, documentations }: TeamAreaProps) => {
         className="w-full"
       />
 
+      {/* Tabs */}
+      <Tabs value={teamActiveTab} onValueChange={handleTabChange}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="clients">Klienten</TabsTrigger>
+          <TabsTrigger value="cases">Fälle</TabsTrigger>
+          <TabsTrigger value="docs">Dokumentationen</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       {/* Breadcrumb Navigation */}
       <Breadcrumb>
         <BreadcrumbList className="flex-wrap gap-1 text-xs sm:text-sm">
           <BreadcrumbItem>
-            {teamLevel === "clients" ? (
-              <BreadcrumbPage>Clienten</BreadcrumbPage>
+            {teamLevel === "clients" && !selectedClientId ? (
+              <BreadcrumbPage>Klienten</BreadcrumbPage>
             ) : (
               <BreadcrumbLink onClick={handleBreadcrumbClients} className="cursor-pointer">
-                Clienten
+                Klienten
               </BreadcrumbLink>
             )}
           </BreadcrumbItem>
@@ -392,7 +473,7 @@ export const TeamArea = ({ clients, cases, documentations }: TeamAreaProps) => {
                 <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
               </BreadcrumbSeparator>
               <BreadcrumbItem>
-                {teamLevel === "cases" ? (
+                {teamLevel === "cases" && !selectedCaseId ? (
                   <BreadcrumbPage>{selectedClient.name}</BreadcrumbPage>
                 ) : (
                   <BreadcrumbLink onClick={handleBreadcrumbClient} className="cursor-pointer">
@@ -409,7 +490,7 @@ export const TeamArea = ({ clients, cases, documentations }: TeamAreaProps) => {
                 <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
               </BreadcrumbSeparator>
               <BreadcrumbItem>
-                {teamLevel === "docs" ? (
+                {teamLevel === "docs" && !selectedDocumentationId ? (
                   <BreadcrumbPage>{selectedCase.title}</BreadcrumbPage>
                 ) : (
                   <BreadcrumbLink onClick={handleBreadcrumbCase} className="cursor-pointer">
