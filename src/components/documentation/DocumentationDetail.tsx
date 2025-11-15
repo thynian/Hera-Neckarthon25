@@ -6,20 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ArrowLeft, Play, Pause, Trash2, Plus, FileText, Download } from "lucide-react";
 import { toast } from "sonner";
 import { generateId } from "@/utils/idGenerator";
@@ -50,11 +38,9 @@ export const DocumentationDetail = ({
 
   const currentCase = cases.find((c) => c.id === editedDoc.caseId);
   const currentClient = clients.find((cl) => cl.id === currentCase?.clientId);
-  
+
   const availableCases = cases.filter((c) => c.clientId === currentClient?.id);
-  const availableAudioFiles = audioFiles.filter(
-    (af) => !editedDoc.audioFiles.some((docAf) => docAf.id === af.id)
-  );
+  const availableAudioFiles = audioFiles.filter((af) => !editedDoc.audioFiles.some((docAf) => docAf.id === af.id));
 
   const handlePlayAudio = (audioId: string, blobUrl: string) => {
     const audio = document.getElementById(`audio-${audioId}`) as HTMLAudioElement;
@@ -82,9 +68,7 @@ export const DocumentationDetail = ({
   const handleUpdateTranscript = (audioId: string, newTranscript: string) => {
     setEditedDoc({
       ...editedDoc,
-      audioFiles: editedDoc.audioFiles.map((af) =>
-        af.id === audioId ? { ...af, transcriptText: newTranscript } : af
-      ),
+      audioFiles: editedDoc.audioFiles.map((af) => (af.id === audioId ? { ...af, transcriptText: newTranscript } : af)),
     });
   };
 
@@ -98,32 +82,30 @@ export const DocumentationDetail = ({
   };
 
   const handleTranscribe = (audioId: string) => {
-    const newTranscript = "Dies ist ein Beispiel-Transkript (Mock). In der echten Implementierung würde hier der transkribierte Text der Audiodateien erscheinen.";
-    
+    const newTranscript =
+      "Dies ist ein Beispiel-Protokoll (Mock). In der echten Implementierung würde hier der transkribierte Text der Audiodateien erscheinen.";
+
     setEditedDoc({
       ...editedDoc,
       audioFiles: editedDoc.audioFiles.map((af) =>
         af.id === audioId
           ? {
               ...af,
-              transcriptText: af.transcriptText
-                ? `${af.transcriptText}\n\n---\n\n${newTranscript}`
-                : newTranscript,
+              transcriptText: af.transcriptText ? `${af.transcriptText}\n\n---\n\n${newTranscript}` : newTranscript,
             }
-          : af
+          : af,
       ),
       status: editedDoc.status === "OPEN" ? "IN_REVIEW" : editedDoc.status,
     });
-    toast.success("Transkription erstellt (Mock)");
+    toast.success("Protokollion erstellt (Mock)");
   };
 
   const handleSummarize = () => {
-    const newSummary = "Dies ist eine Beispiel-Zusammenfassung (Mock). In der echten Implementierung würde hier eine KI-generierte Zusammenfassung erscheinen.";
+    const newSummary =
+      "Dies ist eine Beispiel-Zusammenfassung (Mock). In der echten Implementierung würde hier eine KI-generierte Zusammenfassung erscheinen.";
     setEditedDoc({
       ...editedDoc,
-      summaryText: editedDoc.summaryText 
-        ? `${editedDoc.summaryText}\n\n---\n\n${newSummary}`
-        : newSummary,
+      summaryText: editedDoc.summaryText ? `${editedDoc.summaryText}\n\n---\n\n${newSummary}` : newSummary,
     });
     toast.success("Zusammenfassung erstellt (Mock)");
   };
@@ -261,10 +243,7 @@ export const DocumentationDetail = ({
 
           <div>
             <Label htmlFor="client">Client</Label>
-            <Select
-              value={currentClient?.id}
-              onValueChange={handleClientChange}
-            >
+            <Select value={currentClient?.id} onValueChange={handleClientChange}>
               <SelectTrigger id="client">
                 <SelectValue placeholder="Client auswählen" />
               </SelectTrigger>
@@ -280,10 +259,7 @@ export const DocumentationDetail = ({
 
           <div>
             <Label htmlFor="case">Fall</Label>
-            <Select
-              value={editedDoc.caseId}
-              onValueChange={(caseId) => setEditedDoc({ ...editedDoc, caseId })}
-            >
+            <Select value={editedDoc.caseId} onValueChange={(caseId) => setEditedDoc({ ...editedDoc, caseId })}>
               <SelectTrigger id="case">
                 <SelectValue placeholder="Fall auswählen" />
               </SelectTrigger>
@@ -328,17 +304,16 @@ export const DocumentationDetail = ({
                   </DialogHeader>
                   <div className="space-y-2 max-h-96 overflow-y-auto">
                     {availableAudioFiles.length === 0 ? (
-                      <p className="text-center text-muted-foreground py-8">
-                        Keine weiteren Audio-Dateien verfügbar
-                      </p>
+                      <p className="text-center text-muted-foreground py-8">Keine weiteren Audio-Dateien verfügbar</p>
                     ) : (
                       availableAudioFiles.map((af) => (
-                        <div key={af.id} className="flex items-center justify-between p-3 border border-border rounded-md">
+                        <div
+                          key={af.id}
+                          className="flex items-center justify-between p-3 border border-border rounded-md"
+                        >
                           <div>
                             <p className="font-medium text-sm">{af.fileName}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {formatDuration(af.durationMs)}
-                            </p>
+                            <p className="text-xs text-muted-foreground">{formatDuration(af.durationMs)}</p>
                           </div>
                           <Button size="sm" onClick={() => handleAddAudio(af)}>
                             Hinzufügen
@@ -357,18 +332,14 @@ export const DocumentationDetail = ({
         </CardHeader>
         <CardContent className="space-y-4">
           {editedDoc.audioFiles.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">
-              Keine Audio-Dateien vorhanden
-            </p>
+            <p className="text-center text-muted-foreground py-8">Keine Audio-Dateien vorhanden</p>
           ) : (
             editedDoc.audioFiles.map((audioFile) => (
               <div key={audioFile.id} className="space-y-3 p-4 border border-border rounded-md">
                 <div className="flex items-center gap-4">
                   <div className="flex-1">
                     <p className="font-medium">{audioFile.fileName}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Dauer: {formatDuration(audioFile.durationMs)}
-                    </p>
+                    <p className="text-sm text-muted-foreground">Dauer: {formatDuration(audioFile.durationMs)}</p>
                     <audio
                       id={`audio-${audioFile.id}`}
                       src={audioFile.blobUrl}
@@ -389,18 +360,10 @@ export const DocumentationDetail = ({
                       )}
                       {playingAudioId === audioFile.id ? "Stop" : "Abspielen"}
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleTranscribe(audioFile.id)}
-                    >
+                    <Button size="sm" variant="outline" onClick={() => handleTranscribe(audioFile.id)}>
                       Transkribieren (Mock)
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => handleRemoveAudio(audioFile.id)}
-                    >
+                    <Button size="sm" variant="destructive" onClick={() => handleRemoveAudio(audioFile.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -408,7 +371,7 @@ export const DocumentationDetail = ({
 
                 {audioFile.transcriptText && (
                   <div className="mt-3 space-y-2">
-                    <Label htmlFor={`transcript-${audioFile.id}`}>Transkript</Label>
+                    <Label htmlFor={`transcript-${audioFile.id}`}>Protokoll</Label>
                     <Textarea
                       id={`transcript-${audioFile.id}`}
                       value={audioFile.transcriptText}
@@ -460,13 +423,14 @@ export const DocumentationDetail = ({
         </CardHeader>
         <CardContent>
           {editedDoc.attachments.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">
-              Keine Anhänge vorhanden
-            </p>
+            <p className="text-center text-muted-foreground py-8">Keine Anhänge vorhanden</p>
           ) : (
             <div className="space-y-2">
               {editedDoc.attachments.map((attachment) => (
-                <div key={attachment.id} className="flex items-center justify-between p-3 border border-border rounded-md">
+                <div
+                  key={attachment.id}
+                  className="flex items-center justify-between p-3 border border-border rounded-md"
+                >
                   <div className="flex items-center gap-3">
                     <FileText className="h-5 w-5 text-muted-foreground" />
                     <div>
@@ -477,20 +441,12 @@ export const DocumentationDetail = ({
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      asChild
-                    >
+                    <Button size="sm" variant="ghost" asChild>
                       <a href={attachment.blobUrl} target="_blank" rel="noopener noreferrer">
                         <Download className="h-4 w-4" />
                       </a>
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => handleRemoveAttachment(attachment.id)}
-                    >
+                    <Button size="sm" variant="destructive" onClick={() => handleRemoveAttachment(attachment.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -513,9 +469,7 @@ export const DocumentationDetail = ({
             placeholder="Ein ToDo pro Zeile..."
             rows={6}
           />
-          <p className="text-xs text-muted-foreground mt-2">
-            Tipp: Schreiben Sie jedes ToDo in eine neue Zeile
-          </p>
+          <p className="text-xs text-muted-foreground mt-2">Tipp: Schreiben Sie jedes ToDo in eine neue Zeile</p>
         </CardContent>
       </Card>
 
@@ -524,9 +478,7 @@ export const DocumentationDetail = ({
         <Button variant="outline" onClick={onBack}>
           Abbrechen
         </Button>
-        <Button onClick={handleSave}>
-          Änderungen speichern
-        </Button>
+        <Button onClick={handleSave}>Änderungen speichern</Button>
       </div>
     </div>
   );
