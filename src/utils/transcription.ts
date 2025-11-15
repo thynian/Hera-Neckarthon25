@@ -5,14 +5,14 @@ export const transcribeAudioFile = async (audioId: string, filePath: string) => 
   try {
     toast.info("Transkription wird gestartet...");
 
-    // Download audio file from Supabase Storage
+    // Download audio file
     const { data: audioData, error: downloadError } = await supabase.storage.from("audio-files").download(filePath);
 
     if (downloadError) {
       throw new Error(`Fehler beim Laden der Datei: ${downloadError.message}`);
     }
 
-    // Prepare FormData
+    // Prepare formdata
     const formData = new FormData();
     formData.append("file", audioData, filePath.split("/").pop());
 
