@@ -11,21 +11,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -33,22 +20,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Plus,
-  FileText,
-  Mic,
-  Upload,
-  X,
-  FileAudio,
-  MessageSquare,
-} from "lucide-react";
-import {
-  Client,
-  Case,
-  Documentation,
-  AudioFile,
-  Attachment,
-} from "@/types";
+import { Plus, FileText, Mic, Upload, X, FileAudio, MessageSquare } from "lucide-react";
+import { Client, Case, Documentation, AudioFile, Attachment } from "@/types";
 import { generateCaseId, generateId } from "@/utils/idGenerator";
 
 const formSchema = z.object({
@@ -87,15 +60,9 @@ export const NewDocumentationDialog = ({
   const [selectedClientId, setSelectedClientId] = useState<string>("");
   const [selectedCaseId, setSelectedCaseId] = useState<string>("");
   const [previewCaseId, setPreviewCaseId] = useState<string>("");
-  const [selectedAudioIds, setSelectedAudioIds] = useState<Set<string>>(
-    new Set()
-  );
-  const [audioTranscripts, setAudioTranscripts] = useState<Map<string, string>>(
-    new Map()
-  );
-  const [audioSummaries, setAudioSummaries] = useState<Map<string, string>>(
-    new Map()
-  );
+  const [selectedAudioIds, setSelectedAudioIds] = useState<Set<string>>(new Set());
+  const [audioTranscripts, setAudioTranscripts] = useState<Map<string, string>>(new Map());
+  const [audioSummaries, setAudioSummaries] = useState<Map<string, string>>(new Map());
   const [attachments, setAttachments] = useState<Attachment[]>([]);
 
   // Verwende nur die bereits aufgenommenen Audio-Dateien
@@ -120,9 +87,7 @@ export const NewDocumentationDialog = ({
   }, [showNewCase, cases]);
 
   // Filtere Cases basierend auf ausgewähltem Client
-  const filteredCases = selectedClientId
-    ? cases.filter((c) => c.clientId === selectedClientId)
-    : [];
+  const filteredCases = selectedClientId ? cases.filter((c) => c.clientId === selectedClientId) : [];
 
   const handleCreateClient = () => {
     if (!newClientName.trim()) return;
@@ -138,7 +103,7 @@ export const NewDocumentationDialog = ({
     setSelectedClientId(newClient.id);
     setNewClientName("");
     setShowNewClient(false);
-    
+
     toast.success(`Client "${newClient.name}" wurde erstellt`);
   };
 
@@ -161,7 +126,7 @@ export const NewDocumentationDialog = ({
     setNewCaseTitle("");
     setShowNewCase(false);
     setPreviewCaseId("");
-    
+
     toast.success(`Fall "${caseId}" wurde erstellt`);
   };
 
@@ -186,7 +151,7 @@ export const NewDocumentationDialog = ({
     const newTranscripts = new Map(audioTranscripts);
     newTranscripts.set(
       audioId,
-      "Beispiel-Transkript (Mock): Dies ist ein automatisch generiertes Transkript der Audioaufnahme. In einer echten Implementierung würde hier der transkribierte Text der Aufnahme erscheinen."
+      "Beispiel-Protokoll (Mock): Dies ist ein automatisch generiertes Protokoll der Audioaufnahme. In einer echten Implementierung würde hier der transkribierte Text der Aufnahme erscheinen.",
     );
     setAudioTranscripts(newTranscripts);
   };
@@ -195,11 +160,10 @@ export const NewDocumentationDialog = ({
     const newSummaries = new Map(audioSummaries);
     newSummaries.set(
       audioId,
-      "Beispiel-Zusammenfassung (Mock): Kurze Zusammenfassung der wichtigsten Punkte aus der Audioaufnahme. Hauptthemen wurden identifiziert und strukturiert."
+      "Beispiel-Zusammenfassung (Mock): Kurze Zusammenfassung der wichtigsten Punkte aus der Audioaufnahme. Hauptthemen wurden identifiziert und strukturiert.",
     );
     setAudioSummaries(newSummaries);
   };
-
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -229,14 +193,12 @@ export const NewDocumentationDialog = ({
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       // Sammle ausgewählte AudioFiles
-      const selectedAudios = allAudioFiles.filter((audio) =>
-        selectedAudioIds.has(audio.id)
-      );
+      const selectedAudios = allAudioFiles.filter((audio) => selectedAudioIds.has(audio.id));
 
-      // Erstelle kombinierte Transkripte und Zusammenfassungen
+      // Erstelle kombinierte Protokolle und Zusammenfassungen
       const allSummaries = Array.from(audioSummaries.values()).join("\n\n");
 
-      // Füge Transkripte zu den jeweiligen AudioFiles hinzu
+      // Füge Protokolle zu den jeweiligen AudioFiles hinzu
       const audioFilesWithTranscripts = selectedAudios.map((audio) => ({
         ...audio,
         transcriptText: audioTranscripts.get(audio.id),
@@ -276,11 +238,11 @@ export const NewDocumentationDialog = ({
     setSelectedAudioIds(new Set());
     setAudioTranscripts(new Map());
     setAudioSummaries(new Map());
-    
+
     // Cleanup blob URLs
     attachments.forEach((att) => URL.revokeObjectURL(att.blobUrl));
     setAttachments([]);
-    
+
     onOpenChange(false);
   };
 
@@ -291,9 +253,7 @@ export const NewDocumentationDialog = ({
           <div className="flex items-center justify-between">
             <div>
               <DialogTitle>Neue Dokumentation</DialogTitle>
-              <DialogDescription>
-                Erstellen Sie eine neue Dokumentation für einen Fall
-              </DialogDescription>
+              <DialogDescription>Erstellen Sie eine neue Dokumentation für einen Fall</DialogDescription>
             </div>
             {(showNewCase || previewCaseId) && (
               <Badge variant="outline" className="text-lg">
@@ -472,7 +432,7 @@ export const NewDocumentationDialog = ({
             {/* Audio-Dateien */}
             <div className="space-y-3">
               <Label>Audiodateien auswählen</Label>
-              
+
               {allAudioFiles.length > 0 ? (
                 <div className="space-y-2 max-h-60 overflow-y-auto rounded-lg border border-border p-3">
                   {allAudioFiles.map((audio) => {
@@ -483,20 +443,13 @@ export const NewDocumentationDialog = ({
                           <Checkbox
                             id={`audio-${audio.id}`}
                             checked={isSelected}
-                            onCheckedChange={() =>
-                              toggleAudioSelection(audio.id)
-                            }
+                            onCheckedChange={() => toggleAudioSelection(audio.id)}
                           />
                           <div className="flex-1">
-                            <label
-                              htmlFor={`audio-${audio.id}`}
-                              className="text-sm font-medium cursor-pointer"
-                            >
+                            <label htmlFor={`audio-${audio.id}`} className="text-sm font-medium cursor-pointer">
                               {audio.fileName}
                             </label>
-                            <p className="text-xs text-muted-foreground">
-                              {Math.floor(audio.durationMs / 60000)} min
-                            </p>
+                            <p className="text-xs text-muted-foreground">{Math.floor(audio.durationMs / 60000)} min</p>
                           </div>
                           {isSelected && (
                             <div className="flex gap-1">
@@ -526,17 +479,13 @@ export const NewDocumentationDialog = ({
                         {isSelected && audioTranscripts.has(audio.id) && (
                           <Alert className="ml-8">
                             <FileAudio className="h-4 w-4" />
-                            <AlertDescription className="text-xs">
-                              {audioTranscripts.get(audio.id)}
-                            </AlertDescription>
+                            <AlertDescription className="text-xs">{audioTranscripts.get(audio.id)}</AlertDescription>
                           </Alert>
                         )}
                         {isSelected && audioSummaries.has(audio.id) && (
                           <Alert className="ml-8">
                             <MessageSquare className="h-4 w-4" />
-                            <AlertDescription className="text-xs">
-                              {audioSummaries.get(audio.id)}
-                            </AlertDescription>
+                            <AlertDescription className="text-xs">{audioSummaries.get(audio.id)}</AlertDescription>
                           </Alert>
                         )}
                       </div>
@@ -569,23 +518,13 @@ export const NewDocumentationDialog = ({
               {attachments.length > 0 && (
                 <div className="space-y-2">
                   {attachments.map((att) => (
-                    <div
-                      key={att.id}
-                      className="flex items-center justify-between p-2 rounded bg-secondary"
-                    >
+                    <div key={att.id} className="flex items-center justify-between p-2 rounded bg-secondary">
                       <div className="flex items-center gap-2">
                         <FileText className="h-4 w-4" />
                         <span className="text-sm">{att.fileName}</span>
-                        <span className="text-xs text-muted-foreground">
-                          ({Math.round(att.size / 1024)} KB)
-                        </span>
+                        <span className="text-xs text-muted-foreground">({Math.round(att.size / 1024)} KB)</span>
                       </div>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => removeAttachment(att.id)}
-                      >
+                      <Button type="button" size="sm" variant="ghost" onClick={() => removeAttachment(att.id)}>
                         <X className="h-4 w-4" />
                       </Button>
                     </div>
@@ -608,9 +547,7 @@ export const NewDocumentationDialog = ({
                       {...field}
                     />
                   </FormControl>
-                  <p className="text-xs text-muted-foreground">
-                    Ein ToDo pro Zeile
-                  </p>
+                  <p className="text-xs text-muted-foreground">Ein ToDo pro Zeile</p>
                   <FormMessage />
                 </FormItem>
               )}
