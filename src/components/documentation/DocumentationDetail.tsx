@@ -12,6 +12,7 @@ import { ArrowLeft, Play, Pause, Trash2, Plus, FileText, Download, X, Edit2 } fr
 import { toast } from "sonner";
 import { generateId } from "@/utils/idGenerator";
 import { DocumentationStatusBadge } from "./DocumentationStatusBadge";
+import { useAudioFiles } from "@/hooks/useAudioFiles";
 interface DocumentationDetailProps {
   documentation: Documentation;
   clients: Client[];
@@ -37,10 +38,29 @@ export const DocumentationDetail = ({
   const [curatedTopics, setCuratedTopics] = useState<string[]>([]);
   const [editingTopicIndex, setEditingTopicIndex] = useState<number | null>(null);
   const [editingTopicText, setEditingTopicText] = useState("");
+  
+  // Lade gespeicherte Audio-Dateien aus der Datenbank
+  const { audioFiles: savedAudioFiles, isLoading: isLoadingAudio } = useAudioFiles();
+  
   const currentCase = cases.find(c => c.id === editedDoc.caseId);
   const currentClient = clients.find(cl => cl.id === currentCase?.clientId);
   const availableCases = cases.filter(c => c.clientId === currentClient?.id);
-  const availableAudioFiles = audioFiles.filter(af => !editedDoc.audioFiles.some(docAf => docAf.id === af.id));
+  
+  // Kombiniere Audio-Dateien: bereits zugeordnete + gespeicherte ohne documentation_id
+  const savedAudioFormatted: AudioFile[] = (savedAudioFiles || [])
+    .filter(af => !af.documentation_id)
+    .map(af => ({
+      id: af.id,
+      fileName: af.file_name,
+      createdAt: af.created_at,
+      durationMs: af.duration_ms || 0,
+      blobUrl: af.file_path,
+      transcriptText: af.transcript_text || undefined
+    }));
+  
+  // Verfügbare Audio-Dateien: alle aus Props + gespeicherte, aber nicht die bereits zugeordneten
+  const allAvailableAudio = [...audioFiles, ...savedAudioFormatted];
+  const availableAudioFiles = allAvailableAudio.filter(af => !editedDoc.audioFiles.some(docAf => docAf.id === af.id));
   const handlePlayAudio = (audioId: string, blobUrl: string) => {
     const audio = document.getElementById(`audio-${audioId}`) as HTMLAudioElement;
     if (playingAudioId === audioId) {
