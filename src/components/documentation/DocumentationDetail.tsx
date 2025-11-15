@@ -126,10 +126,10 @@ export const DocumentationDetail = ({
   const handleStartCuration = () => {
     const dummyTopics = [
       "Cybermobbing in der Klasse und online:\nBeleidigende Nachrichten über WhatsApp und Instagram, Ausschluss aus der Klassengemeinschaft, emotionale Belastung.\nSammlung von Beispielen, Verständnis der Situation und erste Schutzmaßnahmen (Blockieren, Melden).",
-      "Dummy-Thema 2: Zeitplan",
-      "Dummy-Thema 3: Offene Punkte",
-      "Dummy-Thema 4: Nächste Schritte",
-      "Dummy-Thema 5: Personalmangel",
+      "Schulische Probleme und Missverständnisse:\nVerpasste Klassenarbeit durch Fehlinformationen von Mitschülern.\nÜberlegungen, wie verpasste Aufgaben nachgeholt werden können, Absprache mit Lehrkraft und Eltern.",
+      "Strategien und Problemlösungen:\nKonkrete Handlungsschritte für den Schüler: Dokumentation, sachliche Kommunikation mit Lehrern, Umgang mit Beleidigungen.\nSoziale Strategien, wie Kontakte zu neutralen Mitschülern oder Unterstützung außerhalb der Klasse stärken.",
+      "Familiäre Situation und Unterstützung zuhause:\nSpannungen zwischen den Eltern, Rückzugsorte und feste Gesprächszeiten.\nEinbindung der Eltern in schulische Angelegenheiten zur Unterstützung",
+      "Selbststärkung und Planung für die Zukunft:\nAufbau von Selbstbewusstsein, Aktivitäten außerhalb der Schule (z. B. Fußball).\nFestlegung von konkreten Aufgaben bis zum nächsten Gespräch (zwei für den Schüler, eine für den Sozialarbeiter) und Erstellung eines klaren Handlungsplans",
     ];
     setCuratedTopics(dummyTopics);
     setIsCuratingTopics(true);
