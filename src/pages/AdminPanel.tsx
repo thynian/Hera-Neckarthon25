@@ -103,6 +103,7 @@ export default function AdminPanel() {
 
     try {
       const caseId = generateCaseId(cases);
+      console.log("Creating case with:", { caseId, clientId: newCaseData.clientId, title: newCaseData.title });
       await createCase({
         client_id: newCaseData.clientId,
         case_id: caseId,
@@ -112,6 +113,7 @@ export default function AdminPanel() {
       setIsCreateCaseDialogOpen(false);
     } catch (error) {
       console.error("Fehler beim Erstellen:", error);
+      toast.error("Fehler beim Erstellen des Falls");
     }
   };
 
@@ -174,88 +176,82 @@ export default function AdminPanel() {
             </h1>
           </div>
           <p className="text-lg text-muted-foreground">
-            Verwalten Sie Mandanten und deren Daten
+            Verwalten Sie Mandanten und Fälle
           </p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-6 md:grid-cols-3 mb-8">
+        <div className="grid gap-6 md:grid-cols-4 mb-8">
           <Card>
             <CardHeader className="pb-3">
-              <CardDescription>Gesamt</CardDescription>
+              <CardDescription>Mandanten</CardDescription>
               <CardTitle className="text-4xl">{clients.length}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">Mandanten im System</p>
+              <p className="text-sm text-muted-foreground">Im System</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-3">
-              <CardDescription>Neu (30 Tage)</CardDescription>
+              <CardDescription>Fälle</CardDescription>
+              <CardTitle className="text-4xl">{cases.length}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">Gesamt</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardDescription>Offene Fälle</CardDescription>
               <CardTitle className="text-4xl">
-                {clients.filter(c => {
-                  const thirtyDaysAgo = new Date();
-                  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-                  return new Date(c.createdAt) > thirtyDaysAgo;
-                }).length}
+                {cases.filter(c => c.status === "OPEN").length}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">In diesem Monat</p>
+              <p className="text-sm text-muted-foreground">In Bearbeitung</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-3">
-              <CardDescription>Neuester</CardDescription>
-              <CardTitle className="text-xl truncate">
-                {clients.length > 0 ? clients[0].name : "-"}
+              <CardDescription>Geschlossene Fälle</CardDescription>
+              <CardTitle className="text-4xl">
+                {cases.filter(c => c.status === "CLOSED").length}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
-                {clients.length > 0
-                  ? new Date(clients[0].createdAt).toLocaleDateString("de-DE")
-                  : "Keine Daten"}
-              </p>
+              <p className="text-sm text-muted-foreground">Abgeschlossen</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Clients Table */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Mandanten</CardTitle>
-                <CardDescription>
-                  Übersicht aller Mandanten im System
-                </CardDescription>
-              </div>
-              <Button onClick={() => setIsCreateClientDialogOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
-                Neuer Mandant
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {clients.length === 0 ? (
-              <div className="text-center py-12">
-                <Users className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
-                <p className="text-lg font-medium text-foreground mb-2">
-                  Keine Mandanten vorhanden
-                </p>
-                <p className="text-sm text-muted-foreground mb-6">
-                  Erstellen Sie Ihren ersten Mandanten, um zu beginnen
-                </p>
-                <Button onClick={() => setIsCreateClientDialogOpen(true)}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Ersten Mandanten anlegen
-                </Button>
-              </div>
-            ) : (
-              <div className="rounded-md border">
+        {/* Tabs for Clients and Cases */}
+        <Tabs defaultValue="clients" className="w-full">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="clients">Mandanten</TabsTrigger>
+            <TabsTrigger value="cases">Fälle</TabsTrigger>
+          </TabsList>
+
+          {/* Clients Tab */}
+          <TabsContent value="clients">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Mandanten</CardTitle>
+                    <CardDescription>
+                      Alle registrierten Mandanten im Überblick
+                    </CardDescription>
+                  </div>
+                  <Button onClick={() => setIsCreateClientDialogOpen(true)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Neuer Mandant
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -270,11 +266,9 @@ export default function AdminPanel() {
                         <TableCell className="font-medium">{client.name}</TableCell>
                         <TableCell>
                           {new Date(client.createdAt).toLocaleDateString("de-DE", {
-                            day: "2-digit",
-                            month: "2-digit",
                             year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
+                            month: "long",
+                            day: "numeric",
                           })}
                         </TableCell>
                         <TableCell className="text-right">
@@ -290,89 +284,283 @@ export default function AdminPanel() {
                     ))}
                   </TableBody>
                 </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        {/* Create Dialog */}
-        <Dialog open={isCreateClientDialogOpen} onOpenChange={setIsCreateClientDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Neuen Mandanten anlegen</DialogTitle>
-              <DialogDescription>
-                Geben Sie die Details für den neuen Mandanten ein.
-              </DialogDescription>
-            </DialogHeader>
+          {/* Cases Tab */}
+          <TabsContent value="cases">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Fälle</CardTitle>
+                    <CardDescription>
+                      Alle Fälle im Überblick
+                    </CardDescription>
+                  </div>
+                  <Button onClick={() => setIsCreateCaseDialogOpen(true)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Neuer Fall
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Fall-ID</TableHead>
+                      <TableHead>Titel</TableHead>
+                      <TableHead>Mandant</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Erstellt am</TableHead>
+                      <TableHead className="text-right">Aktionen</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {cases.map((caseItem) => {
+                      const client = clients.find(c => c.id === caseItem.clientId);
+                      return (
+                        <TableRow key={caseItem.id}>
+                          <TableCell className="font-mono text-sm">{caseItem.caseId}</TableCell>
+                          <TableCell className="font-medium">{caseItem.title}</TableCell>
+                          <TableCell>{client?.name || "Unbekannt"}</TableCell>
+                          <TableCell>
+                            <Badge variant={caseItem.status === "OPEN" ? "default" : "secondary"}>
+                              {caseItem.status === "OPEN" ? "Offen" : "Geschlossen"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {new Date(caseItem.createdAt).toLocaleDateString("de-DE", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            })}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openEditCaseDialog(caseItem)}
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Create Client Dialog */}
+      <Dialog open={isCreateClientDialogOpen} onOpenChange={setIsCreateClientDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Neuen Mandanten anlegen</DialogTitle>
+            <DialogDescription>
+              Geben Sie die Details für den neuen Mandanten ein.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="name">Name *</Label>
+              <Input
+                id="name"
+                placeholder="z.B. Müller GmbH"
+                value={newClientName}
+                onChange={(e) => setNewClientName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleCreateClient();
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreateClientDialogOpen(false)}>
+              Abbrechen
+            </Button>
+            <Button onClick={handleCreateClient}>Anlegen</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Client Dialog */}
+      <Dialog open={isEditClientDialogOpen} onOpenChange={setIsEditClientDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Mandant bearbeiten</DialogTitle>
+            <DialogDescription>
+              Ändern Sie die Details des Mandanten.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="edit-name">Name *</Label>
+              <Input
+                id="edit-name"
+                placeholder="z.B. Müller GmbH"
+                value={editingClient?.name || ""}
+                onChange={(e) =>
+                  setEditingClient(
+                    editingClient ? { ...editingClient, name: e.target.value } : null
+                  )
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleEditClient();
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsEditClientDialogOpen(false);
+                setEditingClient(null);
+              }}
+            >
+              Abbrechen
+            </Button>
+            <Button onClick={handleEditClient}>Speichern</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Case Dialog */}
+      <Dialog open={isCreateCaseDialogOpen} onOpenChange={setIsCreateCaseDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Neuen Fall erstellen</DialogTitle>
+            <DialogDescription>
+              Erstellen Sie einen neuen Fall für einen Mandanten
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="case-client">Mandant</Label>
+              <Select
+                value={newCaseData.clientId}
+                onValueChange={(value) =>
+                  setNewCaseData({ ...newCaseData, clientId: value })
+                }
+              >
+                <SelectTrigger id="case-client">
+                  <SelectValue placeholder="Mandant auswählen" />
+                </SelectTrigger>
+                <SelectContent>
+                  {clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="case-title">Titel</Label>
+              <Input
+                id="case-title"
+                placeholder="Titel des Falls"
+                value={newCaseData.title}
+                onChange={(e) =>
+                  setNewCaseData({ ...newCaseData, title: e.target.value })
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleCreateCase();
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsCreateCaseDialogOpen(false)}
+            >
+              Abbrechen
+            </Button>
+            <Button onClick={handleCreateCase}>Erstellen</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Case Dialog */}
+      <Dialog open={isEditCaseDialogOpen} onOpenChange={setIsEditCaseDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Fall bearbeiten</DialogTitle>
+            <DialogDescription>
+              Ändern Sie den Titel oder Status des Falls
+            </DialogDescription>
+          </DialogHeader>
+          {editingCase && (
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="name">Name *</Label>
+                <Label htmlFor="edit-case-id">Fall-ID</Label>
                 <Input
-                  id="name"
-                  placeholder="z.B. Müller GmbH"
-                  value={newClientName}
-                  onChange={(e) => setNewClientName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleCreateClient();
-                    }
-                  }}
+                  id="edit-case-id"
+                  value={editingCase.caseId}
+                  disabled
+                  className="bg-muted"
                 />
               </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateClientDialogOpen(false)}>
-                Abbrechen
-              </Button>
-              <Button onClick={handleCreateClient}>Anlegen</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Edit Dialog */}
-        <Dialog open={isEditClientDialogOpen} onOpenChange={setIsEditClientDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Mandant bearbeiten</DialogTitle>
-              <DialogDescription>
-                Ändern Sie die Details des Mandanten.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="edit-name">Name *</Label>
+                <Label htmlFor="edit-case-title">Titel</Label>
                 <Input
-                  id="edit-name"
-                  placeholder="z.B. Müller GmbH"
-                  value={editingClient?.name || ""}
+                  id="edit-case-title"
+                  value={editingCase.title}
                   onChange={(e) =>
-                    setEditingClient(
-                      editingClient ? { ...editingClient, name: e.target.value } : null
-                    )
+                    setEditingCase({ ...editingCase, title: e.target.value })
                   }
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                      handleEditClient();
+                      e.preventDefault();
+                      handleEditCase();
                     }
                   }}
                 />
               </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-case-status">Status</Label>
+                <Select
+                  value={editingCase.status}
+                  onValueChange={(value: CaseStatus) =>
+                    setEditingCase({ ...editingCase, status: value })
+                  }
+                >
+                  <SelectTrigger id="edit-case-status">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="OPEN">Offen</SelectItem>
+                    <SelectItem value="CLOSED">Geschlossen</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setIsEditClientDialogOpen(false);
-                  setEditingClient(null);
-                }}
-              >
-                Abbrechen
-              </Button>
-              <Button onClick={handleEditClient}>Speichern</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditCaseDialogOpen(false)}
+            >
+              Abbrechen
+            </Button>
+            <Button onClick={handleEditCase}>Speichern</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
