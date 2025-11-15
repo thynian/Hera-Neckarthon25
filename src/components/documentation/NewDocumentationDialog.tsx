@@ -437,9 +437,24 @@ export const NewDocumentationDialog = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Termin *</FormLabel>
-                  <FormControl>
-                    <Input type="datetime-local" {...field} />
-                  </FormControl>
+                  <div className="flex gap-2">
+                    <FormControl>
+                      <Input type="datetime-local" {...field} />
+                    </FormControl>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        const now = new Date();
+                        const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+                          .toISOString()
+                          .slice(0, 16);
+                        form.setValue("date", localDateTime);
+                      }}
+                    >
+                      Heute
+                    </Button>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
