@@ -1,8 +1,10 @@
 import { cn } from "@/lib/utils";
 import { NavLink } from "./NavLink";
-import { Settings, Menu } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Settings, Menu, LogOut } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import heraLogo from "@/assets/hera-logo.png";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import {
   Sheet,
   SheetContent,
@@ -30,6 +32,24 @@ export const Navigation = ({
   activeTab,
   onTabChange
 }: NavigationProps) => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: "Fehler",
+        description: "Abmeldung fehlgeschlagen",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Erfolgreich abgemeldet",
+      });
+      navigate("/auth");
+    }
+  };
   return (
     <nav className="border-b border-nav-border bg-nav">
       <div className="mx-auto max-w-7xl px-6">
@@ -71,14 +91,25 @@ export const Navigation = ({
             </Link>
           </div>
           
-          <NavLink
-            to="/admin"
-            className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-tab-hover transition-colors"
-            activeClassName="text-primary bg-tab-hover"
-          >
-            <Settings className="h-4 w-4" />
-            Admin
-          </NavLink>
+          <div className="flex items-center gap-2">
+            <NavLink
+              to="/admin"
+              className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-tab-hover transition-colors"
+              activeClassName="text-primary bg-tab-hover"
+            >
+              <Settings className="h-4 w-4" />
+              Admin
+            </NavLink>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleLogout}
+              className="text-muted-foreground hover:bg-tab-hover"
+              title="Abmelden"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </nav>
