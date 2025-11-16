@@ -85,10 +85,10 @@ export const RecordingDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="w-[95vw] max-w-[500px] sm:w-full p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle>Audio-Aufnahme</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-lg sm:text-xl">Audio-Aufnahme</DialogTitle>
+          <DialogDescription className="text-sm">
             {recordingState === "idle" && "Klicken Sie auf Start, um die Aufnahme zu beginnen"}
             {recordingState === "recording" && "Aufnahme läuft..."}
             {recordingState === "paused" && "Aufnahme pausiert"}
@@ -96,28 +96,28 @@ export const RecordingDialog = ({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="space-y-3 sm:space-y-4 py-3 sm:py-4">
           {error && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription className="text-sm">{error}</AlertDescription>
             </Alert>
           )}
 
           {/* Recording Status */}
           {recordingState !== "idle" && (
-            <div className="flex items-center justify-center space-x-4 rounded-lg bg-secondary p-6">
+            <div className="flex items-center justify-center rounded-lg bg-secondary p-4 sm:p-6">
               <div className="flex items-center space-x-2">
                 {recordingState === "recording" && (
-                  <div className="h-3 w-3 rounded-full bg-destructive animate-pulse" />
+                  <div className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-destructive animate-pulse" />
                 )}
                 {recordingState === "paused" && (
-                  <div className="h-3 w-3 rounded-full bg-muted-foreground" />
+                  <div className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-muted-foreground" />
                 )}
                 {recordingState === "stopped" && (
-                  <Square className="h-5 w-5 text-muted-foreground" />
+                  <Square className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                 )}
-                <span className="text-2xl font-mono font-bold">
+                <span className="text-xl sm:text-2xl font-mono font-bold">
                   {formatTime(recordingTime)}
                 </span>
               </div>
@@ -127,27 +127,27 @@ export const RecordingDialog = ({
           {/* Recording Controls */}
           {recordingState === "idle" && (
             <div className="flex justify-center">
-              <Button size="lg" onClick={startRecording}>
-                <Mic className="mr-2 h-5 w-5" />
+              <Button size="lg" onClick={startRecording} className="w-full sm:w-auto">
+                <Mic className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                 Aufnahme starten
               </Button>
             </div>
           )}
 
           {(recordingState === "recording" || recordingState === "paused") && (
-            <div className="flex justify-center space-x-2">
+            <div className="flex flex-col sm:flex-row justify-center gap-2 sm:space-x-2">
               {recordingState === "recording" ? (
-                <Button variant="secondary" onClick={pauseRecording}>
+                <Button variant="secondary" onClick={pauseRecording} className="w-full sm:w-auto">
                   <Pause className="mr-2 h-4 w-4" />
                   Pausieren
                 </Button>
               ) : (
-                <Button variant="secondary" onClick={resumeRecording}>
+                <Button variant="secondary" onClick={resumeRecording} className="w-full sm:w-auto">
                   <Play className="mr-2 h-4 w-4" />
                   Fortsetzen
                 </Button>
               )}
-              <Button variant="destructive" onClick={stopRecording}>
+              <Button variant="destructive" onClick={stopRecording} className="w-full sm:w-auto">
                 <Square className="mr-2 h-4 w-4" />
                 Stop
               </Button>
@@ -158,36 +158,39 @@ export const RecordingDialog = ({
           {recordingState === "stopped" && blobUrl && (
             <>
               <div className="space-y-2">
-                <Label htmlFor="fileName">Dateiname</Label>
+                <Label htmlFor="fileName" className="text-sm">Dateiname</Label>
                 <Input
                   id="fileName"
                   value={fileName}
                   onChange={(e) => setFileName(e.target.value)}
                   placeholder="aufnahme.webm"
+                  className="text-sm"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Vorschau</Label>
-                <audio controls src={blobUrl} className="w-full" />
+                <Label className="text-sm">Vorschau</Label>
+                <audio controls src={blobUrl} className="w-full h-10 sm:h-12" />
               </div>
             </>
           )}
         </div>
 
         {recordingState === "stopped" && (
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={handleClose}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={handleClose} className="w-full sm:w-auto order-last sm:order-first">
               Abbrechen
             </Button>
-            <Button variant="outline" onClick={() => handleSave(false)} disabled={!audioBlob}>
+            <Button variant="outline" onClick={() => handleSave(false)} disabled={!audioBlob} className="w-full sm:w-auto">
               <Save className="mr-2 h-4 w-4" />
-              Nur Speichern
+              <span className="hidden sm:inline">Nur Speichern</span>
+              <span className="sm:hidden">Speichern</span>
             </Button>
             {onSaveAndCreateDocumentation && (
-              <Button onClick={() => handleSave(true)} disabled={!audioBlob}>
+              <Button onClick={() => handleSave(true)} disabled={!audioBlob} className="w-full sm:w-auto">
                 <Save className="mr-2 h-4 w-4" />
-                Speichern & Dokumentation erstellen
+                <span className="hidden sm:inline">Speichern & Dokumentation erstellen</span>
+                <span className="sm:hidden">Speichern & Doku</span>
               </Button>
             )}
           </DialogFooter>
