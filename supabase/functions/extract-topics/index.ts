@@ -68,7 +68,7 @@ Gib NUR das JSON-Array zurück, keine weiteren Erklärungen.`;
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
-        response_format: { type: "json_object" },
+        max_completion_tokens: 1000,
       }),
     });
 
@@ -119,13 +119,34 @@ Gib NUR das JSON-Array zurück, keine weiteren Erklärungen.`;
 
     let topics: string[];
     try {
+      console.log("Raw content from OpenAI:", content);
       const parsed = JSON.parse(content);
-      // Handle both array format and object with topics array
-      topics = Array.isArray(parsed) ? parsed : (parsed.topics || []);
+      
+      // Handle multiple formats:
+      // 1. Direct array: ["topic1", "topic2"]
+      // 2. Object with topics property: { topics: ["topic1", "topic2"] }
+      // 3. Object with numbered keys: { "0": "topic1", "1": "topic2" }
+      if (Array.isArray(parsed)) {
+        topics = parsed;
+      } else if (parsed.topics && Array.isArray(parsed.topics)) {
+        topics = parsed.topics;
+      } else if (typeof parsed === 'object' && parsed !== null) {
+        // Convert object with numbered keys to array
+        const values = Object.values(parsed);
+        if (values.length > 0 && values.every(v => typeof v === 'string')) {
+          topics = values as string[];
+        } else {
+          throw new Error("No valid topics found in object");
+        }
+      } else {
+        throw new Error("Unexpected format");
+      }
       
       if (!Array.isArray(topics) || topics.length === 0) {
         throw new Error("No valid topics array found");
       }
+      
+      console.log("Successfully extracted topics:", topics.length);
     } catch (parseError) {
       console.error("Error parsing topics:", parseError, "Content:", content);
       return new Response(
