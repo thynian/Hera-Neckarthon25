@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ArrowLeft, Play, Pause, Trash2, Plus, FileText, Download, X, Edit2 } from "lucide-react";
 import { toast } from "sonner";
 import { generateId } from "@/utils/idGenerator";
@@ -418,52 +419,52 @@ export const DocumentationDetail = ({
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Audio-Dateien</CardTitle>
-            <div className="flex gap-2">
-              <Dialog open={isAddAudioOpen} onOpenChange={setIsAddAudioOpen}>
-                <DialogTrigger asChild>
-                  <Button size="sm" variant="outline">
-                    <Plus className="h-4 w-4 mr-1" />
-                    Audio hinzufügen
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Audio-Datei hinzufügen</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {availableAudioFiles.length === 0 ? (
-                      <p className="text-center text-muted-foreground py-8">Keine weiteren Audio-Dateien verfügbar</p>
-                    ) : (
-                      availableAudioFiles.map((af) => (
-                        <div
-                          key={af.id}
-                          className="flex items-center justify-between p-3 border border-border rounded-md"
-                        >
-                          <div>
-                            <p className="font-medium text-sm">{af.fileName}</p>
-                            <p className="text-xs text-muted-foreground">{formatDuration(af.durationMs)}</p>
-                          </div>
-                          <Button size="sm" onClick={() => handleAddAudio(af)}>
-                            Hinzufügen
-                          </Button>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </DialogContent>
-              </Dialog>
-              {editedDoc.audioFiles.length > 0 && curatedTopics.length === 0 && (
-                <Button size="sm" variant="outline" onClick={handleStartCuration}>
-                  Themen aus Transkript vorschlagen
-                </Button>
-              )}
-              {editedDoc.audioFiles.length > 0 && curatedTopics.length > 0 && !isCuratingTopics && (
-                <Button size="sm" variant="outline" onClick={() => setIsCuratingTopics(true)}>
-                  <Edit2 className="h-4 w-4 mr-1" />
-                  Themen bearbeiten
-                </Button>
-              )}
-            </div>
+            <TooltipProvider>
+              <div className="flex gap-2">
+                <Dialog open={isAddAudioOpen} onOpenChange={setIsAddAudioOpen}>
+                  <DialogTrigger asChild>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button size="sm" variant="outline">
+                          <Plus className="h-4 w-4 md:mr-1" />
+                          <span className="hidden md:inline">Audio hinzufügen</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent className="md:hidden">
+                        <p>Audio hinzufügen</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </DialogTrigger>
+...
+                </Dialog>
+                {editedDoc.audioFiles.length > 0 && curatedTopics.length === 0 && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button size="sm" variant="outline" onClick={handleStartCuration}>
+                        <FileText className="h-4 w-4 md:mr-1" />
+                        <span className="hidden md:inline">Themen vorschlagen</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="md:hidden">
+                      <p>Themen aus Transkript vorschlagen</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+                {editedDoc.audioFiles.length > 0 && curatedTopics.length > 0 && !isCuratingTopics && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button size="sm" variant="outline" onClick={() => setIsCuratingTopics(true)}>
+                        <Edit2 className="h-4 w-4 md:mr-1" />
+                        <span className="hidden md:inline">Themen bearbeiten</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="md:hidden">
+                      <p>Themen bearbeiten</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+              </div>
+            </TooltipProvider>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -483,27 +484,62 @@ export const DocumentationDetail = ({
                       className="hidden"
                     />
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handlePlayAudio(audioFile.id, audioFile.blobUrl)}
-                    >
-                      {playingAudioId === audioFile.id ? (
-                        <Pause className="h-4 w-4 mr-1" />
-                      ) : (
-                        <Play className="h-4 w-4 mr-1" />
-                      )}
-                      {playingAudioId === audioFile.id ? "Stop" : "Abspielen"}
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleTranscribe(audioFile.id)} disabled={transcribingAudioId === audioFile.id}>
-                      <FileText className="h-4 w-4 mr-1" />
-                      {transcribingAudioId === audioFile.id ? "Transkribiere..." : "Protokoll"}
-                    </Button>
-                    <Button size="sm" variant="destructive" onClick={() => handleRemoveAudio(audioFile.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <TooltipProvider>
+                    <div className="flex gap-2">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handlePlayAudio(audioFile.id, audioFile.blobUrl)}
+                          >
+                            {playingAudioId === audioFile.id ? (
+                              <Pause className="h-4 w-4 md:mr-1" />
+                            ) : (
+                              <Play className="h-4 w-4 md:mr-1" />
+                            )}
+                            <span className="hidden md:inline">
+                              {playingAudioId === audioFile.id ? "Stop" : "Abspielen"}
+                            </span>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="md:hidden">
+                          <p>{playingAudioId === audioFile.id ? "Stop" : "Abspielen"}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => handleTranscribe(audioFile.id)} 
+                            disabled={transcribingAudioId === audioFile.id}
+                          >
+                            <FileText className="h-4 w-4 md:mr-1" />
+                            <span className="hidden md:inline">
+                              {transcribingAudioId === audioFile.id ? "Transkribiere..." : "Protokoll"}
+                            </span>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="md:hidden">
+                          <p>{transcribingAudioId === audioFile.id ? "Transkribiere..." : "Protokoll"}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button size="sm" variant="destructive" onClick={() => handleRemoveAudio(audioFile.id)}>
+                            <Trash2 className="h-4 w-4" />
+                            <span className="hidden md:inline ml-1">Löschen</span>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="md:hidden">
+                          <p>Löschen</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </TooltipProvider>
                 </div>
 
                 {audioFile.transcriptText && (
