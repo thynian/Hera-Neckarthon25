@@ -50,9 +50,9 @@ export const DocumentationDetail = ({
   const currentClient = clients.find((cl) => cl.id === currentCase?.clientId);
   const availableCases = cases.filter((c) => c.clientId === currentClient?.id);
 
-  // Kombiniere Audio-Dateien: bereits zugeordnete + gespeicherte ohne documentation_id
+  // Nur Audio-Dateien ohne Zuordnung sind verfügbar zum Hinzufügen
   const savedAudioFormatted: AudioFile[] = (savedAudioFiles || [])
-    .filter((af) => !af.documentation_id)
+    .filter((af) => !af.documentation_id) // Nur unzugeordnete Dateien
     .map((af) => {
       // Generiere die vollständige öffentliche URL von Supabase Storage
       const { data } = supabase.storage
@@ -64,15 +64,14 @@ export const DocumentationDetail = ({
         fileName: af.file_name,
         createdAt: af.created_at,
         durationMs: af.duration_ms || 0,
-        blobUrl: data.publicUrl, // Verwende die vollständige öffentliche URL
+        blobUrl: data.publicUrl,
         transcriptText: af.transcript_text || undefined,
       };
     });
 
-  // Verfügbare Audio-Dateien: alle aus Props + gespeicherte, aber nicht die bereits zugeordneten
-  const allAvailableAudio = [...audioFiles, ...savedAudioFormatted];
-  const availableAudioFiles = allAvailableAudio.filter(
-    (af) => !editedDoc.audioFiles.some((docAf) => docAf.id === af.id),
+  // Verfügbare Audio-Dateien: nur die, die noch nicht dieser Dokumentation zugeordnet sind
+  const availableAudioFiles = [...audioFiles, ...savedAudioFormatted].filter(
+    (af) => !editedDoc.audioFiles.some((docAf) => docAf.id === af.id)
   );
   const handlePlayAudio = (audioId: string, blobUrl: string) => {
     const audio = document.getElementById(`audio-${audioId}`) as HTMLAudioElement;
@@ -147,17 +146,28 @@ export const DocumentationDetail = ({
       setTranscribingAudioId(null);
     }
   };
-  const handleStartCuration = () => {
-    const dummyTopics = [
-      "Cybermobbing in der Klasse und online:\nBeleidigende Nachrichten über WhatsApp und Instagram, Ausschluss aus der Klassengemeinschaft, emotionale Belastung.\nSammlung von Beispielen, Verständnis der Situation und erste Schutzmaßnahmen (Blockieren, Melden).",
-      "Schulische Probleme und Missverständnisse:\nVerpasste Klassenarbeit durch Fehlinformationen von Mitschülern.\nÜberlegungen, wie verpasste Aufgaben nachgeholt werden können, Absprache mit Lehrkraft und Eltern.",
-      "Strategien und Problemlösungen:\nKonkrete Handlungsschritte für den Schüler: Dokumentation, sachliche Kommunikation mit Lehrern, Umgang mit Beleidigungen.\nSoziale Strategien, wie Kontakte zu neutralen Mitschülern oder Unterstützung außerhalb der Klasse stärken.",
-      "Familiäre Situation und Unterstützung zuhause:\nSpannungen zwischen den Eltern, Rückzugsorte und feste Gesprächszeiten.\nEinbindung der Eltern in schulische Angelegenheiten zur Unterstützung",
-      "Selbststärkung und Planung für die Zukunft:\nAufbau von Selbstbewusstsein, Aktivitäten außerhalb der Schule (z. B. Fußball).\nFestlegung von konkreten Aufgaben bis zum nächsten Gespräch (zwei für den Schüler, eine für den Sozialarbeiter) und Erstellung eines klaren Handlungsplans",
-    ];
-    setCuratedTopics(dummyTopics);
+  const handleStartCuration = async () => {
     setIsCuratingTopics(true);
-    toast.success("Themen aus Transkript vorgeschlagen");
+    
+    try {
+      const transcripts = editedDoc.audioFiles
+        .map((af) => af.transcriptText)
+        .filter((t): t is string => !!t);
+
+      if (transcripts.length === 0) {
+        toast.error("Keine Transkripte vorhanden. Bitte erst Audio-Dateien transkribieren.");
+        setIsCuratingTopics(false);
+        return;
+      }
+
+      const topics = await extractTopicsFromTranscripts(transcripts);
+      setCuratedTopics(topics);
+      toast.success("Themen erfolgreich extrahiert");
+    } catch (error) {
+      console.error("Fehler beim Extrahieren der Themen:", error);
+      toast.error(error instanceof Error ? error.message : "Fehler beim Extrahieren der Themen");
+      setIsCuratingTopics(false);
+    }
   };
 
   const handleAddTopic = () => {
