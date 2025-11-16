@@ -24,9 +24,9 @@ serve(async (req) => {
       );
     }
 
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    if (!OPENAI_API_KEY) {
-      console.error("OPENAI_API_KEY is not configured");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      console.error("LOVABLE_API_KEY is not configured");
       return new Response(
         JSON.stringify({ error: "API-Schlüssel nicht konfiguriert" }),
         { 
@@ -36,39 +36,57 @@ serve(async (req) => {
       );
     }
 
-    const systemPrompt = `Du bist ein professioneller Redakteur. Deine Aufgabe ist es, aus dem folgenden Transkript die 5-7 wichtigsten Hauptthemen zu identifizieren.
+    const systemPrompt = `Du bist ein professioneller Redakteur für Sozialarbeit und Beratung. 
+Analysiere das folgende Transkript eines Beratungsgesprächs und identifiziere die 5-7 wichtigsten Hauptthemen.
 
-Formatiere JEDES Thema als EINEN EINZIGEN String nach diesem Muster:
-"Titel des Themas (z.B. 2-5 Wörter):\\nEine kurze Zusammenfassung dieses Themas in 1-2 Sätzen."
+Formatiere jedes Thema als einen String mit diesem Muster:
+"Thementitel: Kurze Beschreibung in 1-2 Sätzen."
 
-Stelle sicher, dass deine Antwort NUR ein JSON-Array dieser Strings ist und KEINEN anderen Text enthält.
+Beispiele:
+- "Cybermobbing und soziale Medien: Beleidigende Nachrichten über WhatsApp und Instagram führen zu emotionaler Belastung des Schülers."
+- "Schulische Probleme: Verpasste Klassenarbeit durch Fehlinformationen von Mitschülern."
+- "Familiäre Situation: Spannungen zwischen den Eltern werden als zusätzliche Belastung wahrgenommen."
 
-Beispiel-Antwort:
-[
-  "Cybermobbing und soziale Medien:\\nBeleidigende Nachrichten über WhatsApp und Instagram führen zu emotionaler Belastung.",
-  "Schulische Probleme:\\nVerpasste Klassenarbeit durch Fehlinformationen von Mitschülern.",
-  "Familiäre Situation:\\nSpannungen zwischen den Eltern werden als zusätzliche Belastung wahrgenommen."
-]`;
+Antworte NUR mit den Themen, keine Einleitung oder Erklärungen.`;
 
-    const userPrompt = `Analysiere folgendes Transkript und extrahiere die 5-7 wichtigsten Hauptthemen:
-
-${transcript}
-
-Gib NUR das JSON-Array zurück, keine weiteren Erklärungen.`;
-
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-5-mini-2025-08-07",
+        model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
+          { role: "user", content: `Analysiere dieses Transkript und extrahiere 5-7 Hauptthemen:\n\n${transcript}` },
         ],
-        max_completion_tokens: 1000,
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "extract_topics",
+              description: "Extrahiert die wichtigsten Themen aus einem Transkript",
+              parameters: {
+                type: "object",
+                properties: {
+                  topics: {
+                    type: "array",
+                    items: {
+                      type: "string",
+                      description: "Ein Thema im Format 'Titel: Beschreibung'"
+                    },
+                    minItems: 5,
+                    maxItems: 7
+                  }
+                },
+                required: ["topics"],
+                additionalProperties: false
+              }
+            }
+          }
+        ],
+        tool_choice: { type: "function", function: { name: "extract_topics" } },
       }),
     });
 
@@ -93,7 +111,7 @@ Gib NUR das JSON-Array zurück, keine weiteren Erklärungen.`;
       }
       
       const errorText = await response.text();
-      console.error("OpenAI API error:", response.status, errorText);
+      console.error("Lovable AI error:", response.status, errorText);
       return new Response(
         JSON.stringify({ error: "Fehler bei der Themenextraktion" }),
         { 
@@ -104,10 +122,13 @@ Gib NUR das JSON-Array zurück, keine weiteren Erklärungen.`;
     }
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
-
-    if (!content) {
-      console.error("No content from OpenAI response");
+    console.log("Full AI response:", JSON.stringify(data, null, 2));
+    
+    // Extract topics from tool call
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    
+    if (!toolCall || toolCall.function?.name !== "extract_topics") {
+      console.error("No tool call found in response");
       return new Response(
         JSON.stringify({ error: "Keine Themen extrahiert" }),
         { 
@@ -119,28 +140,8 @@ Gib NUR das JSON-Array zurück, keine weiteren Erklärungen.`;
 
     let topics: string[];
     try {
-      console.log("Raw content from OpenAI:", content);
-      const parsed = JSON.parse(content);
-      
-      // Handle multiple formats:
-      // 1. Direct array: ["topic1", "topic2"]
-      // 2. Object with topics property: { topics: ["topic1", "topic2"] }
-      // 3. Object with numbered keys: { "0": "topic1", "1": "topic2" }
-      if (Array.isArray(parsed)) {
-        topics = parsed;
-      } else if (parsed.topics && Array.isArray(parsed.topics)) {
-        topics = parsed.topics;
-      } else if (typeof parsed === 'object' && parsed !== null) {
-        // Convert object with numbered keys to array
-        const values = Object.values(parsed);
-        if (values.length > 0 && values.every(v => typeof v === 'string')) {
-          topics = values as string[];
-        } else {
-          throw new Error("No valid topics found in object");
-        }
-      } else {
-        throw new Error("Unexpected format");
-      }
+      const functionArgs = JSON.parse(toolCall.function.arguments);
+      topics = functionArgs.topics;
       
       if (!Array.isArray(topics) || topics.length === 0) {
         throw new Error("No valid topics array found");
@@ -148,7 +149,7 @@ Gib NUR das JSON-Array zurück, keine weiteren Erklärungen.`;
       
       console.log("Successfully extracted topics:", topics.length);
     } catch (parseError) {
-      console.error("Error parsing topics:", parseError, "Content:", content);
+      console.error("Error parsing topics:", parseError);
       return new Response(
         JSON.stringify({ error: "Ungültiges Themenformat von der KI erhalten" }),
         { 
