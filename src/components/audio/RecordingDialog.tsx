@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Mic, Pause, Play, Square, Save, AlertCircle } from "lucide-react";
+import { Mic, Pause, Play, Square, Save, AlertCircle, X } from "lucide-react";
 import { useState, useEffect } from "react";
 
 interface RecordingDialogProps {
@@ -178,15 +178,14 @@ export const RecordingDialog = ({
 
         {recordingState === "stopped" && (
           <DialogFooter className="flex flex-col sm:flex-row gap-2">
-            <Button variant="outline" onClick={handleClose} className="w-full sm:w-auto order-last sm:order-first">
-              Abbrechen
+            <Button variant="outline" onClick={handleClose} size="icon" className="order-last sm:order-first" aria-label="Abbrechen">
+              <X className="h-4 w-4" />
             </Button>
-            <Button variant="outline" onClick={() => handleSave(false)} disabled={!audioBlob} className="w-full sm:w-auto">
-              <Save className="mr-2 h-4 w-4" />
-              Nur Speichern
+            <Button variant="outline" onClick={() => handleSave(false)} disabled={!audioBlob} size="icon" aria-label="Nur speichern">
+              <Save className="h-4 w-4" />
             </Button>
             {onSaveAndCreateDocumentation && (
-              <Button onClick={() => handleSave(true)} disabled={!audioBlob} className="w-full sm:w-auto">
+              <Button onClick={() => handleSave(true)} disabled={!audioBlob} className="flex-1 sm:flex-initial">
                 <Save className="mr-2 h-4 w-4" />
                 Dokumentation starten
               </Button>
