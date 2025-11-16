@@ -19,12 +19,14 @@ interface RecordingDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (audioFile: AudioFile) => void;
+  onSaveAndCreateDocumentation?: (audioFile: AudioFile) => void;
 }
 
 export const RecordingDialog = ({
   open,
   onOpenChange,
   onSave,
+  onSaveAndCreateDocumentation,
 }: RecordingDialogProps) => {
   const {
     recordingState,
@@ -54,7 +56,7 @@ export const RecordingDialog = ({
     }
   }, [audioBlob, recordingState]);
 
-  const handleSave = () => {
+  const handleSave = (createDocumentation: boolean = false) => {
     if (!audioBlob || !blobUrl) return;
 
     const audioFile: AudioFile = {
@@ -66,7 +68,11 @@ export const RecordingDialog = ({
       blob: audioBlob, // Speichere das Blob für späteren Upload
     };
 
-    onSave(audioFile);
+    if (createDocumentation && onSaveAndCreateDocumentation) {
+      onSaveAndCreateDocumentation(audioFile);
+    } else {
+      onSave(audioFile);
+    }
     handleClose();
   };
 
@@ -170,14 +176,20 @@ export const RecordingDialog = ({
         </div>
 
         {recordingState === "stopped" && (
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button variant="outline" onClick={handleClose}>
               Abbrechen
             </Button>
-            <Button onClick={handleSave} disabled={!audioBlob}>
+            <Button variant="outline" onClick={() => handleSave(false)} disabled={!audioBlob}>
               <Save className="mr-2 h-4 w-4" />
-              Speichern
+              Nur Speichern
             </Button>
+            {onSaveAndCreateDocumentation && (
+              <Button onClick={() => handleSave(true)} disabled={!audioBlob}>
+                <Save className="mr-2 h-4 w-4" />
+                Speichern & Dokumentation erstellen
+              </Button>
+            )}
           </DialogFooter>
         )}
       </DialogContent>

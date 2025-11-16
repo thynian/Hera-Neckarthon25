@@ -33,6 +33,7 @@ interface NewDocumentationDialogProps {
   setCases: React.Dispatch<React.SetStateAction<Case[]>>;
   audioFiles: AudioFile[];
   onSave: (documentation: Documentation) => Promise<void>;
+  initialSelectedAudioIds?: string[];
 }
 export const NewDocumentationDialog = ({
   open,
@@ -42,7 +43,8 @@ export const NewDocumentationDialog = ({
   cases,
   setCases,
   audioFiles,
-  onSave
+  onSave,
+  initialSelectedAudioIds = []
 }: NewDocumentationDialogProps) => {
   const [newClientName, setNewClientName] = useState("");
   const [newCaseTitle, setNewCaseTitle] = useState("");
@@ -93,6 +95,13 @@ export const NewDocumentationDialog = ({
       setPreviewCaseId(generateCaseId(cases));
     }
   }, [showNewCase, cases]);
+
+  // Wähle Audio-Dateien vor, wenn initialSelectedAudioIds gesetzt ist
+  useEffect(() => {
+    if (open && initialSelectedAudioIds.length > 0) {
+      setSelectedAudioIds(new Set(initialSelectedAudioIds));
+    }
+  }, [open, initialSelectedAudioIds]);
 
   // Filtere Cases basierend auf ausgewähltem Client
   const filteredCases = selectedClientId ? cases.filter(c => c.clientId === selectedClientId) : [];
