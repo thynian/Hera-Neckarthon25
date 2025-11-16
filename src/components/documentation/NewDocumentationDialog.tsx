@@ -76,7 +76,13 @@ export const NewDocumentationDialog = ({
     // file_path wird als blobUrl verwendet
     transcriptText: af.transcript_text || undefined
   }));
-  const availableAudioFiles = [...audioFiles, ...savedAudioFormatted];
+  
+  // Wenn initialSelectedAudioIds gesetzt ist (z.B. von Aufnahme), zeige nur diese Audio-Dateien
+  // Sonst zeige alle verfügbaren Audio-Dateien
+  const availableAudioFiles = initialSelectedAudioIds.length > 0
+    ? audioFiles.filter(af => initialSelectedAudioIds.includes(af.id))
+    : [...audioFiles, ...savedAudioFormatted];
+  
   const allAudioFiles = availableAudioFiles;
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
