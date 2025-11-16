@@ -23,6 +23,7 @@ export const DashboardActions = () => {
   const [showRecordingDialog, setShowRecordingDialog] = useState(false);
   const [showDocumentationDialog, setShowDocumentationDialog] = useState(false);
   const [audioFiles, setAudioFiles] = useState<AudioFile[]>([]);
+  const [pendingAudioForDocumentation, setPendingAudioForDocumentation] = useState<AudioFile | null>(null);
 
   const handleStartRecording = () => {
     setShowRecordingDialog(true);
@@ -56,7 +57,40 @@ export const DashboardActions = () => {
     }
   };
 
+  const handleSaveAudioAndCreateDocumentation = async (audioFile: AudioFile) => {
+    try {
+      if (!audioFile.blob) {
+        toast.error("Kein Audio-Blob verfügbar");
+        return;
+      }
+
+      // Erstelle File-Objekt mit MP3 als Format
+      const fileName = audioFile.fileName.replace(/\.[^/.]+$/, '') + '.mp3';
+      const file = new File([audioFile.blob], fileName, { type: 'audio/mp3' });
+
+      // Lade Audio-Datei direkt in die DB hoch (ohne documentation_id)
+      await addAudioFile({
+        file,
+        documentationId: null as any, // nullable now
+        durationMs: audioFile.durationMs,
+      });
+
+      // Füge zum lokalen State hinzu und speichere für Dokumenten-Dialog
+      setAudioFiles(prev => [...prev, audioFile]);
+      setPendingAudioForDocumentation(audioFile);
+      
+      toast.success("Audio-Datei gespeichert");
+      
+      // Öffne Dokumentations-Dialog
+      setShowDocumentationDialog(true);
+    } catch (error) {
+      console.error("Fehler beim Speichern der Audio-Datei:", error);
+      toast.error("Fehler beim Speichern der Audio-Datei");
+    }
+  };
+
   const handleNewDocumentation = () => {
+    setPendingAudioForDocumentation(null);
     setShowDocumentationDialog(true);
   };
 
@@ -218,17 +252,22 @@ export const DashboardActions = () => {
         open={showRecordingDialog}
         onOpenChange={setShowRecordingDialog}
         onSave={handleSaveAudio}
+        onSaveAndCreateDocumentation={handleSaveAudioAndCreateDocumentation}
       />
 
       <NewDocumentationDialog
         open={showDocumentationDialog}
-        onOpenChange={setShowDocumentationDialog}
+        onOpenChange={(open) => {
+          setShowDocumentationDialog(open);
+          if (!open) setPendingAudioForDocumentation(null);
+        }}
         clients={clients}
         setClients={() => {}}
         cases={cases}
         setCases={() => {}}
-        audioFiles={audioFiles}
+        audioFiles={pendingAudioForDocumentation ? [...audioFiles, pendingAudioForDocumentation] : audioFiles}
         onSave={handleSaveDocumentation}
+        initialSelectedAudioIds={pendingAudioForDocumentation ? [pendingAudioForDocumentation.id] : []}
       />
     </>
   );
