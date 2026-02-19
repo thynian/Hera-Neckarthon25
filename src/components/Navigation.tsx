@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { NavLink } from "./NavLink";
 import { Settings, Menu } from "lucide-react";
 import { Link } from "react-router-dom";
-import heraLogo from "@/assets/hera-logo.png";
+
 import {
   Sheet,
   SheetContent,
@@ -66,8 +66,7 @@ export const Navigation = ({
             </Sheet>
             
             <Link to="/" className="flex items-center gap-2 text-xl font-semibold text-foreground hover:text-primary transition-colors">
-              <img src={heraLogo} alt="HERA Logo" className="h-8 w-8" />
-              <span className="text-base">HERA</span>
+              <span className="text-xl font-bold tracking-tight">EAM</span>
             </Link>
           </div>
           
